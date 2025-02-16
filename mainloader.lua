@@ -75,10 +75,10 @@ ScriptsTab:CreateLabel("Boxing Beta script is not working at the moment!")
 ScriptsTab:CreateButton({
     Name = "boxing beta Script",
     Callback = function()
-         print("Not working.")
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/shadowzscript/refs/heads/main/boxingbeta.lua"))()
         Rayfield:Notify({
-            Title = "Callback error!",
-            Content = "Please do Ctrl+V in a new executer tab then execute, We are fixing this error right now.",
+            Title = "Boxing Beta is Loaded!",
+            Content = "Callback error might occur every once and a while.",
             Duration = 5
         })
     end
