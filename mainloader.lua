@@ -70,7 +70,7 @@ ScriptsTab:CreateButton({
     end
 })
 
-ScriptsTab:CreateLabel("Boxing Beta script is not working at the moment!")
+ScriptsTab:CreateLabel("Boxing Beta script is working at the moment might break!")
 
 ScriptsTab:CreateButton({
     Name = "boxing beta Script",
