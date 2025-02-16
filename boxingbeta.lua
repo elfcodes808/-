@@ -12,7 +12,7 @@ local Window = Rayfield:CreateWindow({
    ConfigurationSaving = {
       Enabled = true,
       FolderName = "ShadowZ_Config",
-      FileName = "ShadowZConfig"
+      FileName = "ShadowZ_Config"
    },
    Discord = {
       Enabled = true,
@@ -40,7 +40,7 @@ local PunchRange = 10 -- Define range for detecting nearby players
 local function AutoPunch()
     while AutoPunchEnabled do
         if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            for , player in pairs(Players:GetPlayers()) do
+            for _, player in pairs(Players:GetPlayers()) do
                 if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
                     local distance = (LocalPlayer.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
                     if distance <= PunchRange then
