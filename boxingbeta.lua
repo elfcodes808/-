@@ -35,6 +35,7 @@ local AutoPunchEnabled = false
 local PunchDelay = 0.2
 local WalkSpeed = 16
 local PunchRange = 10 -- Define range for detecting nearby players
+local FasterStamEnabled = false
 
 -- Functions
 local function AutoPunch()
@@ -62,6 +63,19 @@ end
 local function SetWalkSpeed(speed)
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         LocalPlayer.Character.Humanoid.WalkSpeed = speed
+    end
+end
+
+local function FasterStam()
+    while FasterStamEnabled do
+        -- Fire the stamina remote to keep it at 100 constantly
+        ReplicatedStorage.RemoteEvents.PlayerStaminaRemote:FireServer()
+        -- Trigger the BlockEvent to simulate blocking behavior (if needed)
+        local args = {
+            [1] = "unblocking" -- Triggering block (could be a way to simulate unblocking if needed)
+        }
+        ReplicatedStorage.CombatRemotesRemotes.BlockEvent:FireServer(unpack(args))
+        task.wait(0.05) -- Refresh every 0.05 seconds to keep stamina at 100
     end
 end
 
@@ -96,6 +110,18 @@ MiscTab:CreateSlider({
     Callback = function(Value)
         WalkSpeed = Value
         SetWalkSpeed(Value)
+    end
+})
+
+-- Faster Stam Toggle
+MiscTab:CreateToggle({
+    Name = "Faster Stam",
+    CurrentValue = false,
+    Callback = function(Value)
+        FasterStamEnabled = Value
+        if Value then
+            task.spawn(FasterStam) -- Keeps stamina at 100 and triggers BlockEvent
+        end
     end
 })
 
