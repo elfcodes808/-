@@ -14,10 +14,10 @@ local Window = Rayfield:CreateWindow({
         Title = "STOP! Loading process paused.",
         Subtitle = "Insert a key to continue!",
         Note = "Join our support server for the key! .gg/C9nFAdEq4n",
-        FileName = "KeySystem", -- It is recommended to use something unique as other scripts using Rayfield may overwrite your key file
-        SaveKey = false, -- The user's key will be saved, but if you change the key, they will be unable to use your script
-        GrabKeyFromSite = false, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
-        Key = {"KEY_1234Z1x0y2", "Admin_KEY124x0y2b6"} -- List of accepted keys, can be RAW file links (pastebin, github etc) or simple strings
+        FileName = "KeySystem",
+        SaveKey = false,
+        GrabKeyFromSite = false,
+        Key = {"KEY_1234Z1x0y2", "Admin_KEY124x0y2b6"}
     }
 })
 
@@ -37,7 +37,7 @@ if isKeyExpired() then
         Content = "Your key has expired. Please enter a new one.",
         Duration = 5
     })
-    return  -- Stop the script if the key has expired
+    return
 end
 
 -- Scripts Tab
@@ -61,7 +61,7 @@ ScriptsTab:CreateButton({
 ScriptsTab:CreateButton({
     Name = "Siege Script",
     Callback = function()
-         loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/shadowzscript/refs/heads/main/seigescript.lua"))()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/shadowzscript/refs/heads/main/seigescript.lua"))()
         Rayfield:Notify({
             Title = "Successfully loaded!",
             Content = "Siege Script is ready!",
@@ -73,12 +73,24 @@ ScriptsTab:CreateButton({
 ScriptsTab:CreateLabel("Boxing Beta script is working at the moment might break!")
 
 ScriptsTab:CreateButton({
-    Name = "boxing beta Script",
+    Name = "Boxing Beta Script",
     Callback = function()
-         loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/shadowzscript/refs/heads/main/boxingbeta.lua"))()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/shadowzscript/refs/heads/main/boxingbeta.lua"))()
         Rayfield:Notify({
             Title = "Boxing Beta is Loaded!",
             Content = "Callback error might occur every once and a while.",
+            Duration = 5
+        })
+    end
+})
+
+ScriptsTab:CreateButton({
+    Name = "Hoopz Script",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/shadowzscript/refs/heads/main/Hoopz"))()
+        Rayfield:Notify({
+            Title = "Successfully loaded!",
+            Content = "Hoopz script is ready!",
             Duration = 5
         })
     end
@@ -97,7 +109,7 @@ CreditsTab:CreateParagraph({
 InfoTab:CreateButton({
     Name = "Info window",
     Callback = function()
-         loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/shadowzscript/refs/heads/main/informationview.lua"))()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/shadowzscript/refs/heads/main/informationview.lua"))()
         Rayfield:Notify({
             Title = "Successfully loaded!",
             Content = "Information is ready to read!",
