@@ -1,0 +1,106 @@
+local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+local Window = Rayfield:CreateWindow({
+   Name = "ShadowZ",
+   LoadingTitle = "Loading ShadowZ Basketball Legends Script",
+   LoadingSubtitle = "by Fearz",
+   ConfigurationSaving = {
+      Enabled = true,
+      FolderName = "ShadowZ_Config",
+      FileName = "ShadowZ_Config"
+   },
+   Discord = {
+      Enabled = true,
+      Invite = "V6cpWCYN",
+      RememberJoins = true
+   },
+   KeySystem = false
+})
+
+-- Create Tabs
+local CombatTab = Window:CreateTab("🏀 Shooting", 4483362458)
+local MiscTab = Window:CreateTab("⚙️ Misc", 4483362458)
+local CreditTab = Window:CreateTab("📜 Credits", 4483362458)
+
+-- Add Label
+CombatTab:CreateLabel("Basketball Legends Script V1.0")
+
+-- Variables
+local AutoGreenEnabled = false
+local HoldingE = false
+
+-- Functions
+local function AutoGreen()
+    local argsStart = {
+        [1] = 0,
+        [2] = "Starting",
+        [3] = "up",
+        [4] = false,
+        [5] = 0,
+        [6] = 0
+    }
+    ReplicatedStorage.Remotes.Shoot:FireServer(unpack(argsStart))
+    
+    task.wait(0.1) -- Adjustable delay for automatic shooting
+    
+    local argsEnd = {
+        [1] = 0.966570544987917,
+        [2] = "Ending",
+        [3] = "up",
+        [4] = false,
+        [5] = 0,
+        [6] = 0
+    }
+    ReplicatedStorage.Remotes.Shoot:FireServer(unpack(argsEnd))
+end
+
+-- Toggle for Auto Green
+CombatTab:CreateToggle({
+    Name = "Auto Green",
+    CurrentValue = false,
+    Callback = function(Value)
+        AutoGreenEnabled = Value
+    end
+})
+
+-- Keybind to trigger Auto Green
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode == Enum.KeyCode.E then
+        if AutoGreenEnabled then
+            HoldingE = true
+            while HoldingE do
+                AutoGreen()
+                task.wait(0.2) -- Adjust to prevent spamming
+            end
+        end
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input, gameProcessed)
+    if input.KeyCode == Enum.KeyCode.E then
+        HoldingE = false
+    end
+end)
+
+-- Credits Tab
+CreditTab:CreateLabel("Credit to Fearz for making the script!")
+
+CreditTab:CreateButton({
+    Name = "Join Discord",
+    Callback = function()
+        setclipboard("https://discord.gg/rvXsdjcY")
+    end
+})
+
+Rayfield:Notify({
+    Title = "Script Loaded",
+    Content = "ShadowZ Basketball Legends Script V1.0 loaded successfully!",
+    Duration = 5,
+    Image = 4483362458
+})
