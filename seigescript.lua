@@ -4,6 +4,7 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Window = Rayfield:CreateWindow({
    Name = "ShadowZ",
@@ -25,26 +26,22 @@ local Window = Rayfield:CreateWindow({
 -- Create Tabs
 local CombatTab = Window:CreateTab("🔫 Combat", 4483362458)
 local MiscTab = Window:CreateTab("📚 Misc", 4483362458)
+local GunModsTab = Window:CreateTab("🔧 Gun Mods", 4483362458)
 
 -- Add Label
 CombatTab:CreateLabel("Operations: Siege Script V1.0")
 
 -- Variables for functionality
-local AutoTeleportEnabled = false
 local AimbotEnabled = false
 local SilentAimEnabled = false
 local LockToEnemies = false 
 local TargetPart = "Head"
 local AimbotRange = 50 
-local FPSBoostEnabled = false
-local NoClipEnabled = false
+local NoRecoilEnabled = false
 
 -- Helper Functions
 local function IsEnemy(player)
-    if player.Team ~= LocalPlayer.Team then
-        return true
-    end
-    return false
+    return player.Team ~= LocalPlayer.Team
 end
 
 local function GetClosestOpponent()
@@ -79,26 +76,11 @@ local function AimbotLock(targetPlayer)
     end
 end
 
-local function ToggleNoClip()
-    RunService.Stepped:Connect(function()
-        if NoClipEnabled then
-            for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = false
-                end
-            end
-        end
-    end)
-end
-
-local function BoostFPS()
-    if FPSBoostEnabled then
-        for _, v in pairs(Workspace:GetDescendants()) do
-            if v:IsA("BasePart") and not v:IsDescendantOf(LocalPlayer.Character) then
-                v.Material = Enum.Material.SmoothPlastic
-                if v:IsA("Decal") or v:IsA("Texture") then
-                    v:Destroy()
-                end
+local function EnableNoRecoil()
+    if NoRecoilEnabled then
+        for _, v in pairs(ReplicatedStorage:GetDescendants()) do
+            if v:IsA("RemoteEvent") and v.Name:lower():find("recoil") then
+                v:Destroy()
             end
         end
     end
@@ -156,25 +138,17 @@ CombatTab:CreateDropdown({
     end
 })
 
+-- Gun Mods
+GunModsTab:CreateToggle({
+    Name = "No Recoil",
+    CurrentValue = false,
+    Callback = function(Value)
+        NoRecoilEnabled = Value
+        EnableNoRecoil()
+    end
+})
+
 -- Misc Toggles
-MiscTab:CreateToggle({
-    Name = "No Clip",
-    CurrentValue = false,
-    Callback = function(Value)
-        NoClipEnabled = Value
-        ToggleNoClip()
-    end
-})
-
-MiscTab:CreateToggle({
-    Name = "FPS Boost",
-    CurrentValue = false,
-    Callback = function(Value)
-        FPSBoostEnabled = Value
-        BoostFPS()
-    end
-})
-
 MiscTab:CreateButton({
     Name = "Join Discord",
     Callback = function()
@@ -184,7 +158,7 @@ MiscTab:CreateButton({
 
 Rayfield:Notify({
     Title = "Script Loaded",
-    Content = "CodeHub Operations: Siege Script V1.0 loaded successfully!",
+    Content = "ShadowZ Operations: Siege Script V1.0 loaded successfully!",
     Duration = 5,
     Image = 4483362458 
 })
