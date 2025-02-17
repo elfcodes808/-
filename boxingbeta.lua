@@ -28,7 +28,7 @@ local MiscTab = Window:CreateTab("⚙️ Misc", 4483362458)
 local CreditTab = Window:CreateTab("📜 Credits", 4483362458)
 
 -- Add Label
-CombatTab:CreateLabel("Boxing Beta Script V1.2")
+CombatTab:CreateLabel("Boxing Beta Script V1.5")
 
 -- Variables for functionality
 local AutoPunchEnabled = false
@@ -36,6 +36,8 @@ local PunchDelay = 0.2
 local WalkSpeed = 16
 local PunchRange = 10 -- Define range for detecting nearby players
 local AutoBlockEnabled = false
+local AutoDodgeEnabled = false
+local FPSBoostEnabled = false
 
 -- Functions
 local function AutoPunch()
@@ -45,37 +47,62 @@ local function AutoPunch()
                 if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
                     local distance = (LocalPlayer.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
                     if distance <= PunchRange then
-                        -- Make sure the player is within punching range, then trigger the damage event
                         local args = {
-                            [1] = player.Character, -- Targeting player
-                            [3] = "back",           -- The direction for the punch
-                            [4] = true,             -- Ensure true for damage application
-                            [5] = "Left"            -- Punching with the left hand
+                            [1] = player.Character,
+                            [3] = "back",
+                            [4] = true,
+                            [5] = "Left"
                         }
-                        -- Fire the Damage3Event with the correct arguments
                         ReplicatedStorage:WaitForChild("CombatRemotesRemotes"):WaitForChild("Damage3Event"):FireServer(unpack(args))
                     end
                 end
             end
         end
-        task.wait(PunchDelay) -- Adjustable delay
-    end
-end
-
-local function SetWalkSpeed(speed)
-    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-        LocalPlayer.Character.Humanoid.WalkSpeed = speed
+        task.wait(PunchDelay)
     end
 end
 
 local function AutoBlock()
     while AutoBlockEnabled do
-        -- Trigger the BlockEvent with "blockStart"
-        local args = {
-            "blockStart"
-        }
+        local args = {"blockStart"}
         ReplicatedStorage:WaitForChild("CombatRemotesRemotes"):WaitForChild("BlockEvent"):FireServer(unpack(args))
-        task.wait(0.1) -- Adjust the frequency of blocking
+        task.wait(0.1)
+    end
+end
+
+local function AutoDodge()
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        local humanoid = LocalPlayer.Character.Humanoid
+        local lastHealth = humanoid.Health
+        
+        humanoid:GetPropertyChangedSignal("Health"):Connect(function()
+            if AutoDodgeEnabled and humanoid.Health < lastHealth then
+                ReplicatedStorage:WaitForChild("RemoteEvents"):WaitForChild("PlayerDodgeRemote"):FireServer("left")
+            end
+            lastHealth = humanoid.Health
+        end)
+    end
+end
+
+autoDodgeToggle = CombatTab:CreateToggle({
+    Name = "Auto Dodge",
+    CurrentValue = false,
+    Callback = function(Value)
+        AutoDodgeEnabled = Value
+        if Value then
+            task.spawn(AutoDodge)
+        end
+    end
+})
+
+local function FPSBoost()
+    if FPSBoostEnabled then
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("Part") or v:IsA("MeshPart") or v:IsA("UnionOperation") then
+                v.Material = Enum.Material.SmoothPlastic
+                v.Reflectance = 0
+            end
+        end
     end
 end
 
@@ -88,16 +115,6 @@ CombatTab:CreateToggle({
         if Value then
             task.spawn(AutoPunch)
         end
-    end
-})
-
-CombatTab:CreateSlider({
-    Name = "Punch Delay",
-    Range = {0.1, 1.0},
-    Increment = 0.1,
-    CurrentValue = 0.2,
-    Callback = function(Value)
-        PunchDelay = Value
     end
 })
 
@@ -120,7 +137,20 @@ MiscTab:CreateSlider({
     CurrentValue = 16,
     Callback = function(Value)
         WalkSpeed = Value
-        SetWalkSpeed(Value)
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.WalkSpeed = Value
+        end
+    end
+})
+
+MiscTab:CreateToggle({
+    Name = "FPS Boost",
+    CurrentValue = false,
+    Callback = function(Value)
+        FPSBoostEnabled = Value
+        if Value then
+            task.spawn(FPSBoost)
+        end
     end
 })
 
