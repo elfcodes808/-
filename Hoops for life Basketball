@@ -24,7 +24,6 @@ local Window = Rayfield:CreateWindow({
 
 -- Create Tabs
 local MainTab = Window:CreateTab("🏀 Main", 4483362458)
-local MiscTab = Window:CreateTab("⚙️ Misc", 4483362458)
 local CreditTab = Window:CreateTab("📜 Credits", 4483362458)
 
 -- Add Labels
@@ -36,29 +35,39 @@ local AutoGreenEnabled = false
 -- Function to perform Auto Green shot
 local function AutoGreen()
     if AutoGreenEnabled then
-        -- Start shot animation
-        local argsStart = {
-            0,
-            "Starting",
-            "up",
-            false,
-            0,
-            0
-        }
-        ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Shoot"):FireServer(unpack(argsStart))
+        local shootRemote = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("Shoot")
 
-        task.wait(0.15) -- Delay for smooth timing
+        if shootRemote then
+            -- Start shot animation
+            local argsStart = {
+                0,
+                "Starting",
+                "up",
+                false,
+                0,
+                0
+            }
+            shootRemote:FireServer(unpack(argsStart))
 
-        -- End shot animation (Perfect Shot)
-        local argsEnd = {
-            0.9670040998607874,
-            "Ending",
-            "up",
-            false,
-            0,
-            0
-        }
-        ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Shoot"):FireServer(unpack(argsEnd))
+            task.wait(0.15) -- Delay for smooth timing
+
+            -- End shot animation (Perfect Shot)
+            local argsEnd = {
+                0.9341249652206898,
+                "Ending",
+                "up",
+                false,
+                0,
+                0
+            }
+            shootRemote:FireServer(unpack(argsEnd))
+        else
+            Rayfield:Notify({
+                Title = "Error!",
+                Content = "Shoot remote not found!",
+                Duration = 3
+            })
+        end
     end
 end
 
