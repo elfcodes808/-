@@ -70,8 +70,7 @@ ScriptsTab:CreateButton({
     end
 })
 
-ScriptsTab:CreateLabel("Boxing Beta script is working at the moment might break!")
-
+-- Removed the message that says "Boxing beta script might break"
 ScriptsTab:CreateButton({
     Name = "Boxing Beta Script",
     Callback = function()
@@ -84,13 +83,14 @@ ScriptsTab:CreateButton({
     end
 })
 
+-- Fixed name to "Hoops for Life Basketball" and updated the loadstring
 ScriptsTab:CreateButton({
-    Name = "Hoopz Script",
+    Name = "Hoops for Life Basketball Script",
     Callback = function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/shadowzscript/refs/heads/main/Hoopz"))()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/shadowzscript/refs/heads/main/Hoops%20for%20life%20Basketball"))()
         Rayfield:Notify({
             Title = "Successfully loaded!",
-            Content = "Hoopz script is ready!",
+            Content = "Hoops for Life Basketball script is ready!",
             Duration = 5
         })
     end
