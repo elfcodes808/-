@@ -32,11 +32,10 @@ CombatTab:CreateLabel("Boxing Beta Script V1.5")
 
 -- Variables for functionality
 local AutoPunchEnabled = false
-local PunchDelay = 0.2
+local PunchDelay = 0.2  -- Default Punch Delay
 local WalkSpeed = 16
 local PunchRange = 10 -- Define range for detecting nearby players
 local AutoBlockEnabled = false
-local AutoDodgeEnabled = false
 local FPSBoostEnabled = false
 
 -- Functions
@@ -70,31 +69,6 @@ local function AutoBlock()
     end
 end
 
-local function AutoDodge()
-    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-        local humanoid = LocalPlayer.Character.Humanoid
-        local lastHealth = humanoid.Health
-        
-        humanoid:GetPropertyChangedSignal("Health"):Connect(function()
-            if AutoDodgeEnabled and humanoid.Health < lastHealth then
-                ReplicatedStorage:WaitForChild("RemoteEvents"):WaitForChild("PlayerDodgeRemote"):FireServer("left")
-            end
-            lastHealth = humanoid.Health
-        end)
-    end
-end
-
-autoDodgeToggle = CombatTab:CreateToggle({
-    Name = "Auto Dodge",
-    CurrentValue = false,
-    Callback = function(Value)
-        AutoDodgeEnabled = Value
-        if Value then
-            task.spawn(AutoDodge)
-        end
-    end
-})
-
 local function FPSBoost()
     if FPSBoostEnabled then
         for _, v in pairs(workspace:GetDescendants()) do
@@ -126,6 +100,17 @@ CombatTab:CreateToggle({
         if Value then
             task.spawn(AutoBlock)
         end
+    end
+})
+
+-- Punch Delay Slider in Combat Tab
+CombatTab:CreateSlider({
+    Name = "Punch Delay",
+    Range = {0.1, 1},  -- Minimum and maximum delay range
+    Increment = 0.1,
+    CurrentValue = 0.2,  -- Default value
+    Callback = function(Value)
+        PunchDelay = Value
     end
 })
 
