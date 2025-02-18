@@ -4,11 +4,10 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
 
 local Window = Rayfield:CreateWindow({
    Name = "ShadowZ",
-   LoadingTitle = "Loading ShadowZ Basketball Legends Script",
+   LoadingTitle = "Loading ShadowZ Hoops for Life Script",
    LoadingSubtitle = "by Fearz",
    ConfigurationSaving = {
       Enabled = true,
@@ -24,67 +23,63 @@ local Window = Rayfield:CreateWindow({
 })
 
 -- Create Tabs
-local CombatTab = Window:CreateTab("🏀 Shooting", 4483362458)
+local MainTab = Window:CreateTab("🏀 Main", 4483362458)
 local MiscTab = Window:CreateTab("⚙️ Misc", 4483362458)
 local CreditTab = Window:CreateTab("📜 Credits", 4483362458)
 
--- Add Label
-CombatTab:CreateLabel("Basketball Legends Script V1.0")
+-- Add Labels
+MainTab:CreateLabel("Hoops for Life Script V1.0 - ShadowZ")
 
 -- Variables
 local AutoGreenEnabled = false
-local HoldingE = false
 
--- Functions
+-- Function to perform Auto Green shot
 local function AutoGreen()
-    local argsStart = {
-        [1] = 0,
-        [2] = "Starting",
-        [3] = "up",
-        [4] = false,
-        [5] = 0,
-        [6] = 0
-    }
-    ReplicatedStorage.Remotes.Shoot:FireServer(unpack(argsStart))
-    
-    task.wait(0.1) -- Adjustable delay for automatic shooting
-    
-    local argsEnd = {
-        [1] = 0.966570544987917,
-        [2] = "Ending",
-        [3] = "up",
-        [4] = false,
-        [5] = 0,
-        [6] = 0
-    }
-    ReplicatedStorage.Remotes.Shoot:FireServer(unpack(argsEnd))
+    if AutoGreenEnabled then
+        -- Start shot animation
+        local argsStart = {
+            0,
+            "Starting",
+            "up",
+            false,
+            0,
+            0
+        }
+        ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Shoot"):FireServer(unpack(argsStart))
+
+        task.wait(0.15) -- Delay for smooth timing
+
+        -- End shot animation (Perfect Shot)
+        local argsEnd = {
+            0.9670040998607874,
+            "Ending",
+            "up",
+            false,
+            0,
+            0
+        }
+        ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Shoot"):FireServer(unpack(argsEnd))
+    end
 end
 
--- Toggle for Auto Green
-CombatTab:CreateToggle({
-    Name = "Auto Green",
+-- Auto Green Toggle
+MainTab:CreateToggle({
+    Name = "Auto Green (Perfect Shot)",
     CurrentValue = false,
     Callback = function(Value)
         AutoGreenEnabled = Value
+        Rayfield:Notify({
+            Title = AutoGreenEnabled and "Auto Green Enabled" or "Auto Green Disabled",
+            Content = AutoGreenEnabled and "Press 'E' to take a perfect shot!" or "Manual shooting restored.",
+            Duration = 3
+        })
     end
 })
 
--- Keybind to trigger Auto Green
+-- Detect when the player presses "E" and Auto Green is enabled
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if not gameProcessed and input.KeyCode == Enum.KeyCode.E then
-        if AutoGreenEnabled then
-            HoldingE = true
-            while HoldingE do
-                AutoGreen()
-                task.wait(0.2) -- Adjust to prevent spamming
-            end
-        end
-    end
-end)
-
-UserInputService.InputEnded:Connect(function(input, gameProcessed)
-    if input.KeyCode == Enum.KeyCode.E then
-        HoldingE = false
+    if not gameProcessed and input.KeyCode == Enum.KeyCode.E and AutoGreenEnabled then
+        AutoGreen()
     end
 end)
 
@@ -100,7 +95,7 @@ CreditTab:CreateButton({
 
 Rayfield:Notify({
     Title = "Script Loaded",
-    Content = "ShadowZ Basketball Legends Script V1.0 loaded successfully!",
+    Content = "ShadowZ Hoops for Life Script V1.0 loaded successfully!",
     Duration = 5,
     Image = 4483362458
 })
