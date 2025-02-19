@@ -37,6 +37,7 @@ local WalkSpeed = 16
 local PunchRange = 10 -- Define range for detecting nearby players
 local AutoBlockEnabled = false
 local FPSBoostEnabled = false
+local IsDodging = false -- Track if player is dodging
 
 -- Function to check for nearby players
 local function GetNearestPlayer()
@@ -74,19 +75,41 @@ local function AutoPunch()
                 [5] = "Left"
             }
             ReplicatedStorage:WaitForChild("CombatRemotesRemotes"):WaitForChild("Damage3Event"):FireServer(unpack(args))
+
+            -- Keep stamina full when auto block is on
+            if AutoBlockEnabled then
+                ReplicatedStorage:WaitForChild("RemoteEvents"):WaitForChild("PlayerStaminaRemote"):FireServer(math.huge)
+            end
         end
         task.wait(PunchDelay)
     end
 end
 
+-- Auto Block Function (Now allows dodging)
 local function AutoBlock()
     while AutoBlockEnabled do
-        local args = {"blockStart"}
-        ReplicatedStorage:WaitForChild("CombatRemotesRemotes"):WaitForChild("BlockEvent"):FireServer(unpack(args))
+        if not IsDodging then -- Only block if not dodging
+            local args = {"blockStart"}
+            ReplicatedStorage:WaitForChild("CombatRemotesRemotes"):WaitForChild("BlockEvent"):FireServer(unpack(args))
+        end
         task.wait(0.1)
     end
 end
 
+-- Detect when player dodges & temporarily disable auto block
+LocalPlayer.CharacterAdded:Connect(function(character)
+    local humanoid = character:WaitForChild("Humanoid")
+
+    humanoid.StateChanged:Connect(function(_, newState)
+        if newState == Enum.HumanoidStateType.Physics then
+            IsDodging = true
+            task.wait(0.5) -- Wait for dodge to finish
+            IsDodging = false
+        end
+    end)
+end)
+
+-- FPS Boost Function
 local function FPSBoost()
     if FPSBoostEnabled then
         for _, v in pairs(workspace:GetDescendants()) do
@@ -169,7 +192,7 @@ CreditTab:CreateButton({
 
 Rayfield:Notify({
     Title = "Script Loaded",
-    Content = "ShadowZ Boxing Beta Script V1.0 loaded successfully!",
+    Content = "ShadowZ Boxing Beta Script V1.5 loaded successfully!",
     Duration = 5,
     Image = 4483362458
 })
