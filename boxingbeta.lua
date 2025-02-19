@@ -38,24 +38,42 @@ local PunchRange = 10 -- Define range for detecting nearby players
 local AutoBlockEnabled = false
 local FPSBoostEnabled = false
 
--- Functions
-local function AutoPunch()
-    while AutoPunchEnabled do
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            for _, player in pairs(Players:GetPlayers()) do
-                if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
-                    local distance = (LocalPlayer.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
-                    if distance <= PunchRange then
-                        local args = {
-                            [1] = player.Character,
-                            [3] = "back",
-                            [4] = true,
-                            [5] = "Left"
-                        }
-                        ReplicatedStorage:WaitForChild("CombatRemotesRemotes"):WaitForChild("Damage3Event"):FireServer(unpack(args))
-                    end
+-- Function to check for nearby players
+local function GetNearestPlayer()
+    local nearestPlayer = nil
+    local shortestDistance = PunchRange
+
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local myPosition = LocalPlayer.Character.HumanoidRootPart.Position
+
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Humanoid") and player.Character:FindFirstChild("HumanoidRootPart") then
+                local targetPosition = player.Character.HumanoidRootPart.Position
+                local distance = (myPosition - targetPosition).Magnitude
+
+                if distance <= shortestDistance then
+                    shortestDistance = distance
+                    nearestPlayer = player
                 end
             end
+        end
+    end
+
+    return nearestPlayer
+end
+
+-- Auto Punch Function
+local function AutoPunch()
+    while AutoPunchEnabled do
+        local target = GetNearestPlayer()
+        if target and target.Character and target.Character:FindFirstChild("Humanoid") and target.Character.Humanoid.Health > 0 then
+            local args = {
+                [1] = target.Character,
+                [3] = "back",
+                [4] = true,
+                [5] = "Left"
+            }
+            ReplicatedStorage:WaitForChild("CombatRemotesRemotes"):WaitForChild("Damage3Event"):FireServer(unpack(args))
         end
         task.wait(PunchDelay)
     end
