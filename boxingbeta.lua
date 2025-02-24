@@ -180,6 +180,15 @@ MiscTab:CreateToggle({
     end
 })
 
+-- Add Teleport Button in Misc Tab
+MiscTab:CreateButton({
+    Name = "Teleport to Ranked Area",
+    Callback = function()
+        -- Fire the remote to teleport to ranked area
+        ReplicatedStorage.RemoteEvents.TeleportToRankedArea:FireServer()
+    end
+})
+
 -- Credits Tab
 CreditTab:CreateLabel("Credit to Fearz for making the script!")
 
