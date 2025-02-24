@@ -70,7 +70,19 @@ ScriptsTab:CreateButton({
     end
 })
 
--- Removed the message that says "Boxing beta script might break"
+-- Removed the "Hoops for Life Basketball Script" button
+ScriptsTab:CreateButton({
+    Name = "Hoops Nation 2",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/shadowzscript/refs/heads/main/Hoop%20Nation%202"))()
+        Rayfield:Notify({
+            Title = "Successfully loaded!",
+            Content = "Hoops Nation 2 script is ready!",
+            Duration = 5
+        })
+    end
+})
+
 ScriptsTab:CreateButton({
     Name = "Boxing Beta Script",
     Callback = function()
@@ -78,19 +90,6 @@ ScriptsTab:CreateButton({
         Rayfield:Notify({
             Title = "Boxing Beta is Loaded!",
             Content = "Callback error might occur every once and a while.",
-            Duration = 5
-        })
-    end
-})
-
--- Fixed name to "Hoops for Life Basketball" and updated the loadstring
-ScriptsTab:CreateButton({
-    Name = "Hoops for Life Basketball Script",
-    Callback = function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/shadowzscript/refs/heads/main/Hoops%20for%20life%20Basketball"))()
-        Rayfield:Notify({
-            Title = "Successfully loaded!",
-            Content = "Hoops for Life Basketball script is ready!",
             Duration = 5
         })
     end
