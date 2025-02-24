@@ -47,18 +47,6 @@ local FixesTab = Window:CreateTab("Fixes", 4483362458)
 local InfoTab = Window:CreateTab("Information", 4483362458)
 
 ScriptsTab:CreateButton({
-    Name = "Arsenal Menu",
-    Callback = function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/shadowzscript/refs/heads/main/aresnalscript.lua"))()
-        Rayfield:Notify({
-            Title = "Successfully loaded!",
-            Content = "Arsenal menu is ready!",
-            Duration = 5
-        })
-    end
-})
-
-ScriptsTab:CreateButton({
     Name = "Siege Script",
     Callback = function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/shadowzscript/refs/heads/main/seigescript.lua"))()
@@ -70,7 +58,8 @@ ScriptsTab:CreateButton({
     end
 })
 
--- Removed the "Hoops for Life Basketball Script" button
+-- Removed the "Arsenal Menu" button
+
 ScriptsTab:CreateButton({
     Name = "Hoops Nation 2",
     Callback = function()
