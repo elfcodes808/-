@@ -58,8 +58,6 @@ ScriptsTab:CreateButton({
     end
 })
 
--- Removed the "Arsenal Menu" button
-
 ScriptsTab:CreateButton({
     Name = "Hoops Nation 2",
     Callback = function()
