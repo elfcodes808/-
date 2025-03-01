@@ -9,7 +9,7 @@ local Window = Rayfield:CreateWindow({
     ConfigurationSaving = {
         Enabled = false
     },
-    KeySystem = true, -- Set this to true to use our key system
+    KeySystem = false, -- Set this to true to use our key system
     KeySettings = {
         Title = "STOP! Loading process paused.",
         Subtitle = "Insert a key to continue!",
