@@ -98,6 +98,18 @@ ScriptsTab:CreateButton({
     end
 })
 
+ScriptsTab:CreateButton({
+    Name = "Homerun Simulator",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/shadowzscript/refs/heads/main/homerun%20Simulator"))()
+        Rayfield:Notify({
+            Title = "Successfully loaded!",
+            Content = "Homerun Simulator script is ready!",
+            Duration = 5
+        })
+    end
+})
+
 FixesTab:CreateParagraph({
     Title = "FIXES",
     Content = "Fixed callback error"
