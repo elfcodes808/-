@@ -1,0 +1,109 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+    Name = "ShadowZ Hub",
+    LoadingTitle = "Loading ShadowZ Hub...",
+    LoadingSubtitle = "Script by ShadowZ",
+    ConfigurationSaving = {
+        Enabled = false,
+    }
+})
+
+local MainTab = Window:CreateTab("Main", 4483362458)
+local CreditsTab = Window:CreateTab("Credits", 4483362458)
+
+local autoHitEnabled = false
+local autoSellEnabled = false
+local autoOpenCrateEnabled = false
+local autoRedeemRewardsEnabled = false
+
+local function autoHit()
+    while autoHitEnabled do
+        local args = {
+            [1] = 100
+        }
+        game:GetService("ReplicatedStorage"):WaitForChild("RF"):WaitForChild("Launch_Ball"):InvokeServer(unpack(args))
+        task.wait(2) -- 2-second delay
+    end
+end
+
+local function autoSell()
+    while autoSellEnabled do
+        local stats = {"Speed", "Accuracy", "Strength"}
+        for _, stat in ipairs(stats) do
+            local args = {
+                [1] = stat,
+                [2] = 1
+            }
+            game:GetService("ReplicatedStorage"):WaitForChild("RF"):WaitForChild("Upgrade_Attribute"):InvokeServer(unpack(args))
+        end
+        task.wait(2) -- 2-second delay
+    end
+end
+
+local function autoOpenCrate()
+    while autoOpenCrateEnabled do
+        local crates = {"General 2", "General 1"}
+        for _, crate in ipairs(crates) do
+            local args = {
+                [1] = crate
+            }
+            game:GetService("ReplicatedStorage"):WaitForChild("RF"):WaitForChild("Open_Crate"):InvokeServer(unpack(args))
+        end
+        task.wait(2) -- 2-second delay
+    end
+end
+
+local function autoRedeemRewards()
+    while autoRedeemRewardsEnabled do
+        game:GetService("ReplicatedStorage"):WaitForChild("RF"):WaitForChild("Redeem_Free_Reward"):InvokeServer()
+        game:GetService("ReplicatedStorage"):WaitForChild("RF"):WaitForChild("Redeem_Free_Reward"):InvokeServer()
+        task.wait(2) -- 2-second delay
+    end
+end
+
+MainTab:CreateToggle({
+    Name = "Auto Hit",
+    CurrentValue = false,
+    Callback = function(Value)
+        autoHitEnabled = Value
+        if autoHitEnabled then
+            task.spawn(autoHit)
+        end
+    end
+})
+
+MainTab:CreateToggle({
+    Name = "Auto Sell",
+    CurrentValue = false,
+    Callback = function(Value)
+        autoSellEnabled = Value
+        if autoSellEnabled then
+            task.spawn(autoSell)
+        end
+    end
+})
+
+MainTab:CreateToggle({
+    Name = "Auto Open Crate",
+    CurrentValue = false,
+    Callback = function(Value)
+        autoOpenCrateEnabled = Value
+        if autoOpenCrateEnabled then
+            task.spawn(autoOpenCrate)
+        end
+    end
+})
+
+MainTab:CreateToggle({
+    Name = "Auto Redeem Rewards",
+    CurrentValue = false,
+    Callback = function(Value)
+        autoRedeemRewardsEnabled = Value
+        if autoRedeemRewardsEnabled then
+            task.spawn(autoRedeemRewards)
+        end
+    end
+})
+
+CreditsTab:CreateLabel("Script made by ShadowZ")
