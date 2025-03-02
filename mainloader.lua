@@ -110,6 +110,19 @@ ScriptsTab:CreateButton({
     end
 })
 
+-- Add Realistic Basketball Button
+ScriptsTab:CreateButton({
+    Name = "Realistic Basketball",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/shadowzscript/refs/heads/main/Realistic%20Basketball"))()
+        Rayfield:Notify({
+            Title = "Successfully loaded!",
+            Content = "Realistic Basketball script is ready!",
+            Duration = 5
+        })
+    end
+})
+
 FixesTab:CreateParagraph({
     Title = "FIXES",
     Content = "Fixed callback error"
