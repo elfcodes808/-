@@ -2,14 +2,18 @@
 getgenv().SecureMode = true
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
+if not Rayfield then
+    return print("Your executor does not support Rayfield UI.")
+end
+
 local Window = Rayfield:CreateWindow({
     Name = "ShadowZ Script Loader",
     LoadingTitle = "Loading UI...",
-    LoadingSubtitle = "Powered by XyPhron Softworks",
+    LoadingSubtitle = "Powered by ShadowZ",
     ConfigurationSaving = {
         Enabled = false
     },
-    KeySystem = false, -- Set this to true to use our key system
+    KeySystem = false, 
     KeySettings = {
         Title = "STOP! Loading process paused.",
         Subtitle = "Insert a key to continue!",
@@ -77,6 +81,18 @@ ScriptsTab:CreateButton({
         Rayfield:Notify({
             Title = "Boxing Beta is Loaded!",
             Content = "Callback error might occur every once and a while.",
+            Duration = 5
+        })
+    end
+})
+
+ScriptsTab:CreateButton({
+    Name = "Lifting Simulator",
+    Callback = function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/elfcodes808/shadowzscript/refs/heads/main/lifting%20Simulator'))()
+        Rayfield:Notify({
+            Title = "Successfully loaded!",
+            Content = "Lifting Simulator script is ready!",
             Duration = 5
         })
     end
