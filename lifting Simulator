@@ -1,0 +1,96 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+    Name = "💪 Lifting Simulator 💪",
+    LoadingTitle = "Lifting Simulator",
+    LoadingSubtitle = "by ShadowZ",
+    ConfigurationSaving = {
+       Enabled = true,
+       FolderName = "ShadowZ Hub",
+       FileName = "LiftingSim"
+    },
+    Discord = {
+       Enabled = false,
+       Invite = "noinvitelink",
+       RememberJoins = true
+    },
+    KeySystem = false
+})
+
+Rayfield:Notify({
+    Title = "Executor Supported",
+    Content = "You are ready to go!",
+    Duration = 6.5,
+    Image = 4483362458,
+    Actions = {
+       Ignore = {
+          Name = "Okay!",
+          Callback = function()
+          print("The user tapped Okay!")
+       end
+    },
+ },
+})
+
+local MainTab = Window:CreateTab("🔥 Main 🔥", 4483362458)
+local Section = MainTab:CreateSection("Main")
+
+local autoClick = false
+local Toggle = MainTab:CreateToggle({
+    Name = "Auto Click",
+    CurrentValue = false,
+    Callback = function(Value)
+        autoClick = Value
+        while autoClick do
+            local args = { {[1] = "GainMuscle"} }
+            game:GetService("ReplicatedStorage").RemoteEvent:FireServer(unpack(args))
+            wait()
+        end
+    end,
+})
+
+local autoSell = false
+local Toggle = MainTab:CreateToggle({
+    Name = "Auto Sell",
+    CurrentValue = false,
+    Callback = function(Value)
+        autoSell = Value
+        while autoSell do
+            local args = { {[1] = "SellMuscle"} }
+            game:GetService("ReplicatedStorage").RemoteEvent:FireServer(unpack(args))
+            wait(1.5)
+        end
+    end,
+})
+
+local antiAfk = false
+local Toggle = MainTab:CreateToggle({
+    Name = "Anti-Afk",
+    CurrentValue = false,
+    Callback = function(Value)
+        antiAfk = Value
+        while antiAfk do
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/KazeOnTop/Rice-Anti-Afk/main/Wind", true))()
+            wait(1.5)
+        end
+    end,
+})
+
+local MiscTab = Window:CreateTab("⚙️ Misc ⚙️", 4483362458)
+local Section = MiscTab:CreateSection("Miscellaneous")
+
+local Toggle = MiscTab:CreateToggle({
+    Name = "Inf Yield",
+    CurrentValue = false,
+    Callback = function(Value)
+        if Value then
+            loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+        end
+    end,
+})
+
+
+local CreditsTab = Window:CreateTab("⭐ Credits ⭐", 4483362458)
+local Section = CreditsTab:CreateSection("Credits")
+
+local Label = CreditsTab:CreateLabel("Script made by ShadowZ")
