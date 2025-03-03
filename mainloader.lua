@@ -1,5 +1,3 @@
-loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/shadowzscript/refs/heads/main/Shrimp%20game"))()
-
 -- Load Rayfield UI Library
 getgenv().SecureMode = true
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
