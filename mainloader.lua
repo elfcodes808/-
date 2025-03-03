@@ -76,12 +76,20 @@ local InfoTab = Window:CreateTab("Information", 4483362458)
 ScriptsTab:CreateButton({
     Name = "Siege Script",
     Callback = function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/shadowzscript/refs/heads/main/seigescript.lua"))()
-        Rayfield:Notify({
-            Title = "Successfully loaded!",
-            Content = "Siege Script is ready!",
-            Duration = 5
-        })
+        if currentPlaceId == 13997018456 then
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/shadowzscript/refs/heads/main/seigescript.lua"))()
+            Rayfield:Notify({
+                Title = "Successfully loaded!",
+                Content = "Operations Siege script is ready!",
+                Duration = 5
+            })
+        else
+            Rayfield:Notify({
+                Title = "Wrong Game",
+                Content = "You're not in Operations Siege.",
+                Duration = 5
+            })
+        end
     end
 })
 
