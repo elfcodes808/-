@@ -97,7 +97,7 @@ ScriptsTab:CreateButton({
     Name = "Hoops Nation 2",
     Callback = function()
         if currentPlaceId == 15558033314 then
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/shadowzscript/refs/heads/main/Hoop%20Nation%202"))()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/1.%20H"))()
             Rayfield:Notify({
                 Title = "Successfully loaded!",
                 Content = "Hoops Nation 2 script is ready!",
