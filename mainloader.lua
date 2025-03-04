@@ -77,7 +77,7 @@ ScriptsTab:CreateButton({
     Name = "Siege Script",
     Callback = function()
         if currentPlaceId == 13997018456 then
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/shadowzscript/refs/heads/main/seigescript.lua"))()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/OS"))()
             Rayfield:Notify({
                 Title = "Successfully loaded!",
                 Content = "Operations Siege script is ready!",
