@@ -13,9 +13,10 @@ local MainTab = Window:CreateTab("Main", 4483362458)
 local CreditsTab = Window:CreateTab("Credits", 4483362458)
 
 local autoHitEnabled = false
-local autoSellEnabled = false
 local autoOpenCrateEnabled = false
 local autoRedeemRewardsEnabled = false
+local autoClaimDailyRewardsEnabled = false
+local autoUpgradeEnabled = false
 
 local function autoHit()
     while autoHitEnabled do
@@ -23,20 +24,6 @@ local function autoHit()
             [1] = 100
         }
         game:GetService("ReplicatedStorage"):WaitForChild("RF"):WaitForChild("Launch_Ball"):InvokeServer(unpack(args))
-        task.wait(2) -- 2-second delay
-    end
-end
-
-local function autoSell()
-    while autoSellEnabled do
-        local stats = {"Speed", "Accuracy", "Strength"}
-        for _, stat in ipairs(stats) do
-            local args = {
-                [1] = stat,
-                [2] = 1
-            }
-            game:GetService("ReplicatedStorage"):WaitForChild("RF"):WaitForChild("Upgrade_Attribute"):InvokeServer(unpack(args))
-        end
         task.wait(2) -- 2-second delay
     end
 end
@@ -62,6 +49,29 @@ local function autoRedeemRewards()
     end
 end
 
+local function autoClaimDailyRewards()
+    while autoClaimDailyRewardsEnabled do
+        local args = {1}
+        game:GetService("ReplicatedStorage"):WaitForChild("RF"):WaitForChild("Claim_Daily_Reward"):InvokeServer(unpack(args))
+        task.wait(2) -- 2-second delay
+    end
+end
+
+local function autoUpgrade()
+    while autoUpgradeEnabled do
+        local stats = {"Speed", "Accuracy", "Strength"}
+        for _, stat in ipairs(stats) do
+            local args = {
+                [1] = stat,
+                [2] = 1
+            }
+            game:GetService("ReplicatedStorage"):WaitForChild("RF"):WaitForChild("Upgrade_Attribute"):InvokeServer(unpack(args))
+        end
+        task.wait(4) -- fixed 4-second delay
+    end
+end
+
+-- Main Tab Toggles
 MainTab:CreateToggle({
     Name = "Auto Hit",
     CurrentValue = false,
@@ -69,17 +79,6 @@ MainTab:CreateToggle({
         autoHitEnabled = Value
         if autoHitEnabled then
             task.spawn(autoHit)
-        end
-    end
-})
-
-MainTab:CreateToggle({
-    Name = "Auto Sell",
-    CurrentValue = false,
-    Callback = function(Value)
-        autoSellEnabled = Value
-        if autoSellEnabled then
-            task.spawn(autoSell)
         end
     end
 })
@@ -106,4 +105,27 @@ MainTab:CreateToggle({
     end
 })
 
+MainTab:CreateToggle({
+    Name = "Auto Claim Daily Rewards",
+    CurrentValue = false,
+    Callback = function(Value)
+        autoClaimDailyRewardsEnabled = Value
+        if autoClaimDailyRewardsEnabled then
+            task.spawn(autoClaimDailyRewards)
+        end
+    end
+})
+
+MainTab:CreateToggle({
+    Name = "Auto Upgrade",
+    CurrentValue = false,
+    Callback = function(Value)
+        autoUpgradeEnabled = Value
+        if autoUpgradeEnabled then
+            task.spawn(autoUpgrade)
+        end
+    end
+})
+
+-- Credits Tab
 CreditsTab:CreateLabel("Script made by ShadowZ")
