@@ -33,7 +33,6 @@ CombatTab:CreateLabel("Boxing Beta Script V1.5")
 -- Variables for functionality
 local AutoPunchEnabled = false
 local PunchDelay = 0.2  -- Default Punch Delay
-local WalkSpeed = 16
 local PunchRange = 10 -- Define range for detecting nearby players
 local AutoBlockEnabled = false
 local FPSBoostEnabled = false
@@ -75,11 +74,6 @@ local function AutoPunch()
                 [5] = "Left"
             }
             ReplicatedStorage:WaitForChild("CombatRemotesRemotes"):WaitForChild("Damage3Event"):FireServer(unpack(args))
-
-            -- Keep stamina full when auto block is on
-            if AutoBlockEnabled then
-                ReplicatedStorage:WaitForChild("RemoteEvents"):WaitForChild("PlayerStaminaRemote"):FireServer(math.huge)
-            end
         end
         task.wait(PunchDelay)
     end
@@ -162,7 +156,6 @@ MiscTab:CreateSlider({
     Increment = 1,
     CurrentValue = 16,
     Callback = function(Value)
-        WalkSpeed = Value
         if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
             LocalPlayer.Character.Humanoid.WalkSpeed = Value
         end
@@ -177,15 +170,6 @@ MiscTab:CreateToggle({
         if Value then
             task.spawn(FPSBoost)
         end
-    end
-})
-
--- Add Teleport Button in Misc Tab
-MiscTab:CreateButton({
-    Name = "Teleport to Ranked Area",
-    Callback = function()
-        -- Fire the remote to teleport to ranked area
-        ReplicatedStorage.RemoteEvents.TeleportToRankedArea:FireServer()
     end
 })
 
