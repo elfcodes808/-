@@ -177,7 +177,7 @@ ScriptsTab:CreateButton({
     Name = "Homerun Simulator",
     Callback = function()
         if currentPlaceId == 9598746251 then
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/shadowzscript/refs/heads/main/homerun%20Simulator"))()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/HS"))()
             Rayfield:Notify({
                 Title = "Successfully loaded!",
                 Content = "Homerun Simulator script is ready!",
