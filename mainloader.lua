@@ -117,7 +117,7 @@ ScriptsTab:CreateButton({
     Name = "Realistic Basketball",
     Callback = function()
         if currentPlaceId == 15441481660 then
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/shadowzscript/refs/heads/main/Realistic%20Basketball"))()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/2.%20RB"))()
             Rayfield:Notify({
                 Title = "Successfully loaded!",
                 Content = "Realistic Basketball script is ready!",
