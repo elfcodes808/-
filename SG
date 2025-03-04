@@ -4,7 +4,7 @@ local moveDistance = 500 -- Moves player 500 studs forward
 local Window = Rayfield:CreateWindow({
     Name = "Shrimp Game GUI",
     LoadingTitle = "Loading Shrimp Game...",
-    LoadingSubtitle = "By ShadowZ",
+    LoadingSubtitle = "By YourName",
     ConfigurationSaving = {
         Enabled = false
     }
@@ -12,6 +12,7 @@ local Window = Rayfield:CreateWindow({
 
 -- Main Tab
 local MainTab = Window:CreateTab("Main", 4483362458)
+
 MainTab:CreateButton({
     Name = "Auto Finish Red Light Green Light",
     Callback = function()
@@ -24,7 +25,6 @@ MainTab:CreateButton({
         end
     end
 })
-
 
 -- Credits Tab
 local CreditsTab = Window:CreateTab("Credits", 4483362458)
