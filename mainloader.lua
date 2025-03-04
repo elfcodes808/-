@@ -157,7 +157,7 @@ ScriptsTab:CreateButton({
     Name = "Boxing Beta Script",
     Callback = function()
         if currentPlaceId == 6804602922 then
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/shadowzscript/refs/heads/main/boxingbeta.lua"))()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/BE"))()
             Rayfield:Notify({
                 Title = "Boxing Beta is Loaded!",
                 Content = "Callback error might occur every once and a while.",
