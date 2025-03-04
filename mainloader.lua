@@ -137,7 +137,7 @@ ScriptsTab:CreateButton({
     Name = "Lifting Simulator",
     Callback = function()
         if currentPlaceId == 3652625463 then
-            loadstring(game:HttpGet('https://raw.githubusercontent.com/elfcodes808/shadowzscript/refs/heads/main/lifting%20Simulator'))()
+            loadstring(game:HttpGet('https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/LS'))()
             Rayfield:Notify({
                 Title = "Successfully loaded!",
                 Content = "Lifting Simulator script is ready!",
