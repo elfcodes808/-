@@ -198,7 +198,7 @@ ScriptsTab:CreateButton({
     Name = "Shrimp Game",
     Callback = function()
         if currentPlaceId == 7606564092 then
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/shadowzscript/refs/heads/main/Shrimp%20game"))()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/shadowzscript/refs/heads/main/Shrimp%20game?token=GHSAT0AAAAAAC6LFF27XLLLUPS5HZSKW4YOZ6GLUIQ"))()
             Rayfield:Notify({
                 Title = "Successfully loaded!",
                 Content = "Shrimp Game script is ready!",
