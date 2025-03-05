@@ -8,7 +8,7 @@ end
 
 local Window = Rayfield:CreateWindow({
     Name = "ShadowZ Script Loader",
-    LoadingTitle = "Loading UI...",
+    LoadingTitle = "Loading ShadowZ Main Loader...",
     LoadingSubtitle = "Powered by ShadowZ",
     ConfigurationSaving = {
         Enabled = false
@@ -37,6 +37,7 @@ local validPlaceIds = {
     [6804602922] = "Boxing Beta",
     [9598746251] = "Homerun Simulator",
     [13997018456] = "Operations Siege",
+    [16732694052] = "Fisch"  -- Fisch's PlaceId added here
 }
 
 -- Check if the current PlaceId is valid and matches the correct game
@@ -163,6 +164,28 @@ ScriptsTab:CreateButton({
             Rayfield:Notify({
                 Title = "Wrong Game",
                 Content = "You're not in Homerun Simulator.",
+                Duration = 5
+            })
+        end
+    end
+})
+
+-- Add Fisch Script Button
+ScriptsTab:CreateButton({
+    Name = "Fisch Script",
+    Callback = function()
+        if currentPlaceId == 16732694052 then
+            local script = game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/FC")  -- Correct Fisch script URL
+            loadstring(script)()
+            Rayfield:Notify({
+                Title = "Successfully loaded!",
+                Content = "Fisch script is ready!",
+                Duration = 5
+            })
+        else
+            Rayfield:Notify({
+                Title = "Wrong Game",
+                Content = "You're not in Fisch.",
                 Duration = 5
             })
         end
