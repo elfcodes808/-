@@ -13,36 +13,21 @@ local Window = Rayfield:CreateWindow({
     ConfigurationSaving = {
         Enabled = false
     },
-    KeySystem = false, 
-    KeySettings = {
-        Title = "STOP! Loading process paused.",
-        Subtitle = "Insert a key to continue!",
-        Note = "Join our support server for the key! .gg/C9nFAdEq4n",
-        FileName = "KeySystem",
-        SaveKey = false,
-        GrabKeyFromSite = false,
-        Key = {"KEY_1234Z1x0y2", "Admin_KEY124x0y2b6"}
-    }
+    KeySystem = false,  -- Set KeySystem to false
 })
 
--- Key expiration functionality
-local keyExpirationTime = 5  -- 5 seconds until the key expires
-local keyStartTime = tick()  -- Record the start time when the script starts
+-- Scripts Tab
+local ScriptsTab = Window:CreateTab("Scripts", 4483362458)
+local CreditsTab = Window:CreateTab("Credits", 4483362458)
+local FixesTab = Window:CreateTab("Fixes", 4483362458)
+local InfoTab = Window:CreateTab("Information", 4483362458)
 
--- Function to check if the key has expired
-local function isKeyExpired()
-    return tick() - keyStartTime >= keyExpirationTime
-end
-
--- Wait for the key input and check if it has expired
-if isKeyExpired() then
-    Rayfield:Notify({
-        Title = "Key Expired",
-        Content = "Your key has expired. Please enter a new one.",
-        Duration = 5
-    })
-    return
-end
+-- Main loader notification
+Rayfield:Notify({
+    Title = "Successfully loaded!",
+    Content = "Script loader is ready!",
+    Duration = 3
+})
 
 -- Define valid place IDs for each game
 local validPlaceIds = {
@@ -52,32 +37,18 @@ local validPlaceIds = {
     [6804602922] = "Boxing Beta",
     [9598746251] = "Homerun Simulator",
     [13997018456] = "Operations Siege",
-    [7606564092] = "Shrimp Game"
 }
 
 -- Check if the current PlaceId is valid and matches the correct game
 local currentPlaceId = game.PlaceId
 
-if not validPlaceIds[currentPlaceId] then
-    Rayfield:Notify({
-        Title = "Wrong Game",
-        Content = "You're in the wrong game to use this script. Please enter the correct game.",
-        Duration = 5
-    })
-    return
-end
-
--- Scripts Tab
-local ScriptsTab = Window:CreateTab("Scripts", 4483362458)
-local CreditsTab = Window:CreateTab("Credits", 4483362458)
-local FixesTab = Window:CreateTab("Fixes", 4483362458)
-local InfoTab = Window:CreateTab("Information", 4483362458)
-
+-- Create buttons for each game script
 ScriptsTab:CreateButton({
     Name = "Siege Script",
     Callback = function()
         if currentPlaceId == 13997018456 then
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/OS"))()
+            local script = game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/OS")
+            loadstring(script)()
             Rayfield:Notify({
                 Title = "Successfully loaded!",
                 Content = "Operations Siege script is ready!",
@@ -97,7 +68,8 @@ ScriptsTab:CreateButton({
     Name = "Hoops Nation 2",
     Callback = function()
         if currentPlaceId == 15558033314 then
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/1.%20H"))()
+            local script = game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/1.%20H")
+            loadstring(script)()
             Rayfield:Notify({
                 Title = "Successfully loaded!",
                 Content = "Hoops Nation 2 script is ready!",
@@ -117,7 +89,8 @@ ScriptsTab:CreateButton({
     Name = "Realistic Basketball",
     Callback = function()
         if currentPlaceId == 15441481660 then
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/2.%20RB"))()
+            local script = game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/2.%20RB")
+            loadstring(script)()
             Rayfield:Notify({
                 Title = "Successfully loaded!",
                 Content = "Realistic Basketball script is ready!",
@@ -137,7 +110,8 @@ ScriptsTab:CreateButton({
     Name = "Lifting Simulator",
     Callback = function()
         if currentPlaceId == 3652625463 then
-            loadstring(game:HttpGet('https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/LS'))()
+            local script = game:HttpGet('https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/LS')
+            loadstring(script)()
             Rayfield:Notify({
                 Title = "Successfully loaded!",
                 Content = "Lifting Simulator script is ready!",
@@ -157,7 +131,8 @@ ScriptsTab:CreateButton({
     Name = "Boxing Beta Script",
     Callback = function()
         if currentPlaceId == 6804602922 then
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/BE"))()
+            local script = game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/BE")
+            loadstring(script)()
             Rayfield:Notify({
                 Title = "Boxing Beta is Loaded!",
                 Content = "Callback error might occur every once and a while.",
@@ -177,7 +152,8 @@ ScriptsTab:CreateButton({
     Name = "Homerun Simulator",
     Callback = function()
         if currentPlaceId == 9598746251 then
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/HS"))()
+            local script = game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/HS")
+            loadstring(script)()
             Rayfield:Notify({
                 Title = "Successfully loaded!",
                 Content = "Homerun Simulator script is ready!",
@@ -193,24 +169,17 @@ ScriptsTab:CreateButton({
     end
 })
 
--- Add Shrimp Game Button
+-- Shrimp Game Button (no place ID required)
 ScriptsTab:CreateButton({
     Name = "Shrimp Game",
     Callback = function()
-        if currentPlaceId == 7606564092 then
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/SG"))()
-            Rayfield:Notify({
-                Title = "Successfully loaded!",
-                Content = "Shrimp Game script is ready!",
-                Duration = 5
-            })
-        else
-            Rayfield:Notify({
-                Title = "Wrong Game",
-                Content = "You're not in Shrimp Game.",
-                Duration = 5
-            })
-        end
+        local script = game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/SG")
+        loadstring(script)()
+        Rayfield:Notify({
+            Title = "Successfully loaded!",
+            Content = "Shrimp Game script is ready!",
+            Duration = 5
+        })
     end
 })
 
@@ -227,7 +196,8 @@ CreditsTab:CreateParagraph({
 InfoTab:CreateButton({
     Name = "Info window",
     Callback = function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/shadowzscript/refs/heads/main/informationview.lua"))()
+        local script = game:HttpGet("https://raw.githubusercontent.com/elfcodes808/shadowzscript/refs/heads/main/informationview.lua")
+        loadstring(script)()
         Rayfield:Notify({
             Title = "Successfully loaded!",
             Content = "Information is ready to read!",
@@ -236,8 +206,11 @@ InfoTab:CreateButton({
     end
 })
 
-Rayfield:Notify({
-    Title = "Successfully loaded!",
-    Content = "Script loader is ready!",
-    Duration = 3
-})
+-- Game check (after all buttons are loaded)
+if not validPlaceIds[currentPlaceId] then
+    Rayfield:Notify({
+        Title = "Wrong Game",
+        Content = "You're in the wrong game to use this script. Please enter the correct game.",
+        Duration = 5
+    })
+end
