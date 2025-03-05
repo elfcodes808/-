@@ -26,6 +26,19 @@ MainTab:CreateButton({
     end
 })
 
+-- Auto Pull Tug of War Toggle
+local AutoPullTugOfWarToggle = MainTab:CreateToggle({
+    Name = "Auto Pull Tug of War",
+    Default = false,
+    Callback = function(state)
+        if state then
+            -- Fire the PullRope event to trigger Auto Pull
+            local args = {}
+            game:GetService("ReplicatedStorage"):WaitForChild("Remotes", 9e9):WaitForChild("Events", 9e9):WaitForChild("PullRope", 9e9):FireServer(unpack(args))
+        end
+    end
+})
+
 -- Credits Tab
 local CreditsTab = Window:CreateTab("Credits", 4483362458)
 CreditsTab:CreateParagraph({
