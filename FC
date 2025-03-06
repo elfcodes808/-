@@ -3,8 +3,8 @@ local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
 -- Setup the GUI Window
 local Window = Rayfield:CreateWindow({
-    Name = "ShadowZ Fisch",
-    LoadingTitle = "Loading ShadowZ...",
+    Name = "ShadowZ Fisch Hub",
+    LoadingTitle = "Loading...",
     LoadingSubtitle = "By ShadowZ",
     ConfigurationSaving = {
         Enabled = true,
@@ -36,7 +36,7 @@ local GuiService = game:GetService('GuiService')
 local VirtualInputManager = game:GetService('VirtualInputManager')
 local RunService = game:GetService("RunService")
 
--- Function to find the fishing rod
+-- Function to safely find the fishing rod
 local function FindRod()
     return lp.Backpack:FindFirstChild("Rod")
 end
@@ -97,19 +97,29 @@ MiscTab:CreateToggle({
 -- Create Credits in Credits Tab
 CreditsTab:CreateLabel("Made by ShadowZ 🖤")
 
--- RunService Heartbeat loop
+-- RunService Heartbeat loop with safety checks
 RunService.Heartbeat:Connect(function()
-    -- AutoCast Logic - Non-stop when toggled on
+    -- AutoCast Logic - Non-stop when toggled on with randomized delays
     if flags['autocast'] then
         local args = {
             [1] = 98.39999999999988;
             [2] = 1;
         }
-        workspace:WaitForChild("hjhjhjhjhhjhj53", 9e9):WaitForChild("Flimsy Rod", 9e9):WaitForChild("events", 9e9):WaitForChild("cast", 9e9):FireServer(unpack(args))
-        task.wait(0.5)  -- Add a small delay to prevent too rapid firing
+
+        local rod = workspace:WaitForChild("hjhjhjhjhhjhj53", 9e9):FindFirstChild("Flimsy Rod")
+        if rod then
+            local events = rod:FindFirstChild("events")
+            if events then
+                local castEvent = events:FindFirstChild("cast")
+                if castEvent then
+                    castEvent:FireServer(unpack(args))
+                end
+            end
+        end
+        task.wait(math.random(1, 2))  -- Randomized delay between 1 and 2 seconds
     end
 
-    -- AutoShake Logic - Non-stop when toggled on
+    -- AutoShake Logic - Non-stop when toggled on with randomized delays
     if flags['autoshake'] then
         local shakeUI = FindChild(lp.PlayerGui, 'shakeui')
         if shakeUI then
@@ -125,17 +135,23 @@ RunService.Heartbeat:Connect(function()
                 end
             end
         end
-        task.wait(0.5)  -- Add a small delay to prevent too rapid firing
+        task.wait(math.random(2, 3))  -- Randomized delay between 2 and 3 seconds
     end
 
-    -- AutoReel Logic - Non-stop when toggled on
+    -- AutoReel Logic - Non-stop when toggled on with randomized delays
     if flags['autoreel'] then
         local args = {
             [1] = 100;
             [2] = false;
         }
-        game:GetService("ReplicatedStorage"):WaitForChild("events", 9e9):WaitForChild("reelfinished", 9e9):FireServer(unpack(args))
-        task.wait(0.5)  -- Add a small delay to prevent too rapid firing
+        local events = ReplicatedStorage:WaitForChild("events", 9e9)
+        if events then
+            local reelFinished = events:FindFirstChild("reelfinished")
+            if reelFinished then
+                reelFinished:FireServer(unpack(args))
+            end
+        end
+        task.wait(math.random(1, 2))  -- Randomized delay between 1 and 2 seconds
     end
 
     -- Infinite Oxygen Logic - Non-stop when toggled on
@@ -155,8 +171,9 @@ RunService.Heartbeat:Connect(function()
         if not deathcon then
             deathcon = gethum().Died:Connect(function()
                 task.delay(9, function()
-                    if FindChild(getchar(), 'DivingTank') then
-                        FindChild(getchar(), 'DivingTank'):Destroy()
+                    local divingTank = FindChild(getchar(), 'DivingTank')
+                    if divingTank then
+                        divingTank:Destroy()
                     end
                     local oxygentank = Instance.new('Decal')
                     oxygentank.Name = 'DivingTank'
@@ -177,8 +194,9 @@ RunService.Heartbeat:Connect(function()
             end
         end
     else
-        if FindChild(getchar(), 'DivingTank') then
-            FindChild(getchar(), 'DivingTank'):Destroy()
+        local divingTank = FindChild(getchar(), 'DivingTank')
+        if divingTank then
+            divingTank:Destroy()
         end
     end
 end)
