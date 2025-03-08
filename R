@@ -15,10 +15,11 @@ local silentAimActive = false
 local aimbotActive = false
 local espActive = false
 local fovActive = false
-local espList = {}
+local currentOpponent = nil
 local fovCircle = Drawing.new("Circle")
-local aimbotRange = 150 -- Default range for aimbot lock-on
-local aimbotSmoothness = 5 -- Default smoothness for aimbot
+local aimbotRange = 150 -- Default lock-on range
+local aimbotSmoothness = 5 -- Default smoothness
+local espBox = nil -- ESP box for the opponent
 
 -- Create Rayfield Window
 local Window = Rayfield:CreateWindow({ Name = "ShadowZ Hub", LoadingTitle = "Loading Rivals...", LoadingSubtitle = "by ShadowZ 😎", IntroEnabled = false })
@@ -31,68 +32,63 @@ local CreditsTab = Window:CreateTab("Credits 💎", 4483362458)
 -- Add "This is V1.0" Label to Combat Tab
 CombatTab:CreateSection("🔥 This is V1.0 🔥")
 
--- Functions
-
--- Function to get the best target for aimbot
-local function getBestTarget()
-    local closestPlayer = nil
-    local shortestDistance = math.huge
-
+-- Function to get the opponent you are currently fighting
+local function getOpponent()
     for _, player in pairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            -- Check if the opponent is engaging with LocalPlayer
             local distance = (player.Character.HumanoidRootPart.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
-            if distance < aimbotRange and distance < shortestDistance then
-                shortestDistance = distance
-                closestPlayer = player
+            if distance < aimbotRange then
+                return player
             end
         end
     end
-
-    if closestPlayer and closestPlayer.Character and closestPlayer.Character:FindFirstChild("Head") then
-        return closestPlayer.Character.Head
-    end
-
     return nil
 end
 
--- Aimbot functionality (smooth locking)
+-- Function to update current opponent
 RunService.RenderStepped:Connect(function()
-    if aimbotActive then
-        local targetHead = getBestTarget()
-        if targetHead then
-            local targetPosition = targetHead.Position
+    currentOpponent = getOpponent()
+end)
+
+-- Aimbot Function (Smooth Lock-On)
+RunService.RenderStepped:Connect(function()
+    if aimbotActive and currentOpponent then
+        local head = currentOpponent.Character and currentOpponent.Character:FindFirstChild("Head")
+        if head then
+            local targetPosition = head.Position
             Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, targetPosition), 1 / aimbotSmoothness)
         end
     end
 end)
 
--- Silent aim functionality (improves aim without lock-on)
+-- Silent Aim (Improves Aim Without Full Lock-On)
 UserInputService.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 and silentAimActive then
-        local targetHead = getBestTarget()
-        if targetHead then
-            local aimPosition = targetHead.Position
+    if input.UserInputType == Enum.UserInputType.MouseButton1 and silentAimActive and currentOpponent then
+        local head = currentOpponent.Character and currentOpponent.Character:FindFirstChild("Head")
+        if head then
+            local aimPosition = head.Position
             Camera.CFrame = CFrame.new(Camera.CFrame.Position, aimPosition)
-            ReplicatedStorage.Remotes.Attack:FireServer(targetHead)
+            ReplicatedStorage.Remotes.Attack:FireServer(head)
         end
     end
 end)
 
--- Function to create ESP for a player
-local function createESP(player)
-    if player ~= LocalPlayer then
-        local espBox = Drawing.new("Quad")
-        espBox.Thickness = 2
-        espBox.Color = Color3.fromRGB(0, 0, 255) -- Blue color for ESP
-        espBox.Transparency = 1
-        espBox.Visible = false
-
-        espList[player.Name] = espBox
-
+-- Function to Create ESP for Current Opponent
+local function updateESP()
+    if espActive and currentOpponent then
+        if not espBox then
+            espBox = Drawing.new("Quad")
+            espBox.Thickness = 2
+            espBox.Color = Color3.fromRGB(0, 0, 255) -- Blue color for ESP
+            espBox.Transparency = 1
+            espBox.Visible = true
+        end
+        
         RunService.RenderStepped:Connect(function()
-            if espActive and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                local rootPart = player.Character.HumanoidRootPart
-                local head = player.Character:FindFirstChild("Head")
+            if espActive and currentOpponent and currentOpponent.Character and currentOpponent.Character:FindFirstChild("HumanoidRootPart") then
+                local rootPart = currentOpponent.Character.HumanoidRootPart
+                local head = currentOpponent.Character:FindFirstChild("Head")
 
                 if rootPart and head then
                     local rootPos, rootVisible = Camera:WorldToViewportPoint(rootPart.Position)
@@ -111,29 +107,17 @@ local function createESP(player)
                     espBox.Visible = false
                 end
             else
-                espBox.Visible = false
+                if espBox then
+                    espBox.Visible = false
+                end
             end
         end)
+    else
+        if espBox then
+            espBox.Visible = false
+        end
     end
 end
-
--- Adding ESP for players already in the game
-for _, player in pairs(Players:GetPlayers()) do
-    createESP(player)
-end
-
--- When a new player joins
-Players.PlayerAdded:Connect(function(player)
-    createESP(player)
-end)
-
--- When a player leaves
-Players.PlayerRemoving:Connect(function(player)
-    if espList[player.Name] then
-        espList[player.Name]:Remove()
-        espList[player.Name] = nil
-    end
-end)
 
 -- Combat Tab: Silent Aim Toggle
 CombatTab:CreateToggle({
@@ -179,11 +163,12 @@ CombatTab:CreateSlider({
 
 -- Visuals Tab: ESP Toggle
 VisualsTab:CreateToggle({
-    Name = "👀 Player ESP",
+    Name = "👀 Player ESP (Opponent Only)",
     CurrentValue = false,
     Flag = "espToggle",
     Callback = function(value)
         espActive = value
+        updateESP()
     end
 })
 
