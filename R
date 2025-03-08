@@ -19,7 +19,8 @@ local currentOpponent = nil
 local fovCircle = Drawing.new("Circle")
 local aimbotRange = 150 -- Default lock-on range
 local aimbotSmoothness = 5 -- Default smoothness
-local espBox = nil -- ESP box for the opponent
+local espBoxes = {} -- Table to store ESP boxes for all players
+local fovRadius = 100 -- Default FOV size
 
 -- Create Rayfield Window
 local Window = Rayfield:CreateWindow({ Name = "ShadowZ Hub", LoadingTitle = "Loading Rivals...", LoadingSubtitle = "by ShadowZ 😎", IntroEnabled = false })
@@ -69,52 +70,50 @@ UserInputService.InputBegan:Connect(function(input)
         if head then
             local aimPosition = head.Position
             Camera.CFrame = CFrame.new(Camera.CFrame.Position, aimPosition)
-            ReplicatedStorage.Remotes.Attack:FireServer(head)
+            if ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("Attack") then
+                ReplicatedStorage.Remotes.Attack:FireServer(head)
+            end
         end
     end
 end)
 
--- Function to Create ESP for Current Opponent
+-- Function to Create ESP for All Players
 local function updateESP()
-    if espActive and currentOpponent then
-        if not espBox then
-            espBox = Drawing.new("Quad")
-            espBox.Thickness = 2
-            espBox.Color = Color3.fromRGB(0, 0, 255) -- Blue color for ESP
-            espBox.Transparency = 1
-            espBox.Visible = true
-        end
-        
-        RunService.RenderStepped:Connect(function()
-            if espActive and currentOpponent and currentOpponent.Character and currentOpponent.Character:FindFirstChild("HumanoidRootPart") then
-                local rootPart = currentOpponent.Character.HumanoidRootPart
-                local head = currentOpponent.Character:FindFirstChild("Head")
+    if espActive then
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                local rootPart = player.Character.HumanoidRootPart
+                local head = player.Character:FindFirstChild("Head")
 
                 if rootPart and head then
                     local rootPos, rootVisible = Camera:WorldToViewportPoint(rootPart.Position)
                     local headPos, headVisible = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
 
-                    if rootVisible and headVisible then
-                        espBox.PointA = Vector2.new(rootPos.X - 15, rootPos.Y + 30)
-                        espBox.PointB = Vector2.new(rootPos.X + 15, rootPos.Y + 30)
-                        espBox.PointC = Vector2.new(headPos.X + 15, headPos.Y)
-                        espBox.PointD = Vector2.new(headPos.X - 15, headPos.Y)
-                        espBox.Visible = true
-                    else
-                        espBox.Visible = false
+                    -- Create ESP box if not exists
+                    if not espBoxes[player] then
+                        espBoxes[player] = Drawing.new("Quad")
+                        espBoxes[player].Thickness = 2
+                        espBoxes[player].Color = Color3.fromRGB(0, 0, 255) -- Blue color for ESP
+                        espBoxes[player].Transparency = 1
+                        espBoxes[player].Visible = true
                     end
-                else
-                    espBox.Visible = false
-                end
-            else
-                if espBox then
-                    espBox.Visible = false
+
+                    -- Update ESP box position
+                    if rootVisible and headVisible then
+                        espBoxes[player].PointA = Vector2.new(rootPos.X - 15, rootPos.Y + 30)
+                        espBoxes[player].PointB = Vector2.new(rootPos.X + 15, rootPos.Y + 30)
+                        espBoxes[player].PointC = Vector2.new(headPos.X + 15, headPos.Y)
+                        espBoxes[player].PointD = Vector2.new(headPos.X - 15, headPos.Y)
+                        espBoxes[player].Visible = true
+                    else
+                        espBoxes[player].Visible = false
+                    end
                 end
             end
-        end)
+        end
     else
-        if espBox then
-            espBox.Visible = false
+        for _, box in pairs(espBoxes) do
+            box.Visible = false
         end
     end
 end
@@ -163,7 +162,7 @@ CombatTab:CreateSlider({
 
 -- Visuals Tab: ESP Toggle
 VisualsTab:CreateToggle({
-    Name = "👀 Player ESP (Opponent Only)",
+    Name = "👀 Player ESP (All Players)",
     CurrentValue = false,
     Flag = "espToggle",
     Callback = function(value)
@@ -191,6 +190,7 @@ VisualsTab:CreateSlider({
     CurrentValue = 100,
     Callback = function(value)
         fovCircle.Radius = value
+        fovRadius = value
     end
 })
 
