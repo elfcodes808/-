@@ -1,174 +1,243 @@
--- Load Rayfield UI Library
-getgenv().SecureMode = true
+-- Load the Ray Field GUI Library
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
-if not Rayfield then
-    return print("Your executor does not support Rayfield UI.")
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Camera = Workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
+
+-- Variables
+local silentAimActive = false
+local aimbotActive = false
+local espActive = false
+local fovActive = false
+local triggerBotActive = false -- New variable for the trigger bot
+local currentOpponent = nil
+local fovCircle = Drawing.new("Circle")
+local aimbotRange = 150 -- Default lock-on range
+local aimbotSmoothness = 5 -- Default smoothness
+local espBoxes = {} -- Table to store ESP boxes for all players
+local fovRadius = 100 -- Default FOV size
+
+-- Create Rayfield Window
+local Window = Rayfield:CreateWindow({ Name = "ShadowZ Hub", LoadingTitle = "Loading Rivals...", LoadingSubtitle = "by ShadowZ 😎", IntroEnabled = false })
+
+-- Create Tabs
+local CombatTab = Window:CreateTab("Combat ⚔️", 4483362458)
+local VisualsTab = Window:CreateTab("Visuals 👀", 4483362458)
+local CreditsTab = Window:CreateTab("Credits 💎", 4483362458)
+
+-- Add "This is V1.0" Label to Combat Tab
+CombatTab:CreateSection("🔥 This is V1.0 🔥")
+
+-- Function to get the opponent you are currently fighting
+local function getOpponent()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            -- Check if the opponent is engaging with LocalPlayer
+            local distance = (player.Character.HumanoidRootPart.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+            if distance < aimbotRange then
+                return player
+            end
+        end
+    end
+    return nil
 end
 
-local Window = Rayfield:CreateWindow({
-    Name = "ShadowZ Script Loader",
-    LoadingTitle = "Loading ShadowZ Main Loader...",
-    LoadingSubtitle = "Powered by ShadowZ",
-    ConfigurationSaving = {
-        Enabled = false
-    },
-    KeySystem = false,  -- Set KeySystem to false
-})
+-- Function to update current opponent
+RunService.RenderStepped:Connect(function()
+    currentOpponent = getOpponent()
+end)
 
--- Scripts Tab
-local ScriptsTab = Window:CreateTab("Scripts", 4483362458)
-local CreditsTab = Window:CreateTab("Credits", 4483362458)
-local FixesTab = Window:CreateTab("Fixes", 4483362458)
-local InfoTab = Window:CreateTab("Information", 4483362458)
+-- Trigger Bot Function
+local function triggerBot()
+    if triggerBotActive then
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
+                local head = player.Character:FindFirstChild("Head")
+                local distance = (head.Position - Camera.CFrame.Position).Magnitude
+                if distance <= fovRadius then
+                    -- Replace with your actual attack remote
+                    if ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("Attack") then
+                        ReplicatedStorage.Remotes.Attack:FireServer(head)
+                    end
+                end
+            end
+        end
+    end
+end
 
--- Main loader notification
-Rayfield:Notify({
-    Title = "Successfully loaded!",
-    Content = "Script loader is ready!",
-    Duration = 3
-})
+-- Aimbot Function (Smooth Lock-On)
+RunService.RenderStepped:Connect(function()
+    if aimbotActive and currentOpponent then
+        local head = currentOpponent.Character and currentOpponent.Character:FindFirstChild("Head")
+        if head then
+            local targetPosition = head.Position
+            Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, targetPosition), 1 / aimbotSmoothness)
+        end
+    end
+end)
 
--- Create buttons for each game script
-ScriptsTab:CreateButton({
-    Name = "Siege Script",
-    Callback = function()
-        local script = game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/OS")
-        loadstring(script)()
-        Rayfield:Notify({
-            Title = "Successfully loaded!",
-            Content = "Operations Siege script is ready!",
-            Duration = 5
-        })
+-- Silent Aim (Improves Aim Without Full Lock-On)
+UserInputService.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 and silentAimActive and currentOpponent then
+        local head = currentOpponent.Character and currentOpponent.Character:FindFirstChild("Head")
+        if head then
+            local aimPosition = head.Position
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, aimPosition)
+            if ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("Attack") then
+                ReplicatedStorage.Remotes.Attack:FireServer(head)
+            end
+        end
+    end
+end)
+
+-- Function to Create ESP for All Players
+local function updateESP()
+    if espActive then
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                local rootPart = player.Character.HumanoidRootPart
+                local head = player.Character:FindFirstChild("Head")
+
+                if rootPart and head then
+                    local rootPos, rootVisible = Camera:WorldToViewportPoint(rootPart.Position)
+                    local headPos, headVisible = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
+
+                    -- Create ESP box if not exists
+                    if not espBoxes[player] then
+                        espBoxes[player] = Drawing.new("Quad")
+                        espBoxes[player].Thickness = 2
+                        espBoxes[player].Color = Color3.fromRGB(0, 0, 255) -- Blue color for ESP
+                        espBoxes[player].Transparency = 1
+                        espBoxes[player].Visible = true
+                    end
+
+                    -- Update ESP box position
+                    if rootVisible and headVisible then
+                        espBoxes[player].PointA = Vector2.new(rootPos.X - 15, rootPos.Y + 30)
+                        espBoxes[player].PointB = Vector2.new(rootPos.X + 15, rootPos.Y + 30)
+                        espBoxes[player].PointC = Vector2.new(headPos.X + 15, headPos.Y)
+                        espBoxes[player].PointD = Vector2.new(headPos.X - 15, headPos.Y)
+                        espBoxes[player].Visible = true
+                    else
+                        espBoxes[player].Visible = false
+                    end
+                end
+            end
+        end
+    else
+        for _, box in pairs(espBoxes) do
+            box.Visible = false
+        end
+    end
+end
+
+-- Combat Tab: Silent Aim Toggle
+CombatTab:CreateToggle({
+    Name = "🎯 Silent Aim",
+    CurrentValue = false,
+    Flag = "silentAimToggle",
+    Callback = function(value)
+        silentAimActive = value
     end
 })
 
-ScriptsTab:CreateButton({
-    Name = "Hoops Nation 2",
-    Callback = function()
-        local script = game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/1.%20H")
-        loadstring(script)()
-        Rayfield:Notify({
-            Title = "Successfully loaded!",
-            Content = "Hoops Nation 2 script is ready!",
-            Duration = 5
-        })
+-- Combat Tab: Aimbot Toggle
+CombatTab:CreateToggle({
+    Name = "🔫 Aimbot Lock-On",
+    CurrentValue = false,
+    Flag = "aimbotToggle",
+    Callback = function(value)
+        aimbotActive = value
     end
 })
 
-ScriptsTab:CreateButton({
-    Name = "Realistic Basketball",
-    Callback = function()
-        local script = game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/2.%20RB")
-        loadstring(script)()
-        Rayfield:Notify({
-            Title = "Successfully loaded!",
-            Content = "Realistic Basketball script is ready!",
-            Duration = 5
-        })
+-- Combat Tab: Trigger Bot Toggle
+CombatTab:CreateToggle({
+    Name = "🤖 Trigger Bot",
+    CurrentValue = false,
+    Flag = "triggerBotToggle",
+    Callback = function(value)
+        triggerBotActive = value
     end
 })
 
-ScriptsTab:CreateButton({
-    Name = "Lifting Simulator",
-    Callback = function()
-        local script = game:HttpGet('https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/LS')
-        loadstring(script)()
-        Rayfield:Notify({
-            Title = "Successfully loaded!",
-            Content = "Lifting Simulator script is ready!",
-            Duration = 5
-        })
+-- Combat Tab: Aimbot Range Slider
+CombatTab:CreateSlider({
+    Name = "📏 Aimbot Range",
+    Range = {50, 300},
+    Increment = 10,
+    CurrentValue = 150,
+    Callback = function(value)
+        aimbotRange = value
     end
 })
 
-ScriptsTab:CreateButton({
-    Name = "Boxing Beta Script",
-    Callback = function()
-        local script = game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/BE")
-        loadstring(script)()
-        Rayfield:Notify({
-            Title = "Boxing Beta is Loaded!",
-            Content = "Callback error might occur every once and a while.",
-            Duration = 5
-        })
+-- Combat Tab: Smoothness Slider
+CombatTab:CreateSlider({
+    Name = "⚡ Aimbot Smoothness",
+    Range = {1, 10},
+    Increment = 1,
+    CurrentValue = 5,
+    Callback = function(value)
+        aimbotSmoothness = value
     end
 })
 
-ScriptsTab:CreateButton({
-    Name = "Homerun Simulator",
-    Callback = function()
-        local script = game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/HS")
-        loadstring(script)()
-        Rayfield:Notify({
-            Title = "Successfully loaded!",
-            Content = "Homerun Simulator script is ready!",
-            Duration = 5
-        })
+-- Visuals Tab: ESP Toggle
+VisualsTab:CreateToggle({
+    Name = "👀 Player ESP",
+    CurrentValue = false,
+    Flag = "espToggle",
+    Callback = function(value)
+        espActive = value
+        updateESP()
     end
 })
 
--- Add Fisch Script Button
-ScriptsTab:CreateButton({
-    Name = "Fisch Script",
-    Callback = function()
-        local script = game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/FC")  -- Correct Fisch script URL
-        loadstring(script)()
-        Rayfield:Notify({
-            Title = "Successfully loaded!",
-            Content = "Fisch script is ready!",
-            Duration = 5
-        })
+-- Visuals Tab: FOV Toggle
+VisualsTab:CreateToggle({
+    Name = "🔵 FOV Circle",
+    CurrentValue = false,
+    Flag = "fovToggle",
+    Callback = function(value)
+        fovActive = value
+        fovCircle.Visible = value
     end
 })
 
--- Shrimp Game Button (no place ID required)
-ScriptsTab:CreateButton({
-    Name = "Shrimp Game",
-    Callback = function()
-        local script = game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/SG")
-        loadstring(script)()
-        Rayfield:Notify({
-            Title = "Successfully loaded!",
-            Content = "Shrimp Game script is ready!",
-            Duration = 5
-        })
+-- Visuals Tab: FOV Size Slider
+VisualsTab:CreateSlider({
+    Name = "📏 FOV Size",
+    Range = {50, 200},
+    Increment = 10,
+    CurrentValue = 100,
+    Callback = function(value)
+        fovCircle.Radius = value
+        fovRadius = value
     end
 })
 
--- Rivals Script Button
-ScriptsTab:CreateButton({
-    Name = "Rivals Script",
-    Callback = function()
-        local script = game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/R")  -- Rivals script URL
-        loadstring(script)()
-        Rayfield:Notify({
-            Title = "Successfully loaded!",
-            Content = "Rivals script is ready!",
-            Duration = 5
-        })
+-- Configure FOV Circle
+fovCircle.Color = Color3.fromRGB(0, 0, 255)
+fovCircle.Thickness = 2
+fovCircle.Filled = false
+fovCircle.Transparency = 1
+fovCircle.Visible = false
+
+RunService.RenderStepped:Connect(function()
+    if fovActive then
+        fovCircle.Position = UserInputService:GetMouseLocation()
     end
-})
+    triggerBot() -- Call the trigger bot function each frame
+end)
 
-FixesTab:CreateParagraph({
-    Title = "FIXES",
-    Content = "Fixed callback error"
-})
+-- Credits Tab: Display Creator Info
+CreditsTab:CreateSection("💎 Made by ShadowZ 💎")
 
-CreditsTab:CreateParagraph({
-    Title = "Special Thanks",
-    Content = "Developed by kadencodes"
-})
-
-InfoTab:CreateButton({
-    Name = "Info window",
-    Callback = function()
-        local script = game:HttpGet("https://raw.githubusercontent.com/elfcodes808/shadowzscript/refs/heads/main/informationview.lua")
-        loadstring(script)()
-        Rayfield:Notify({
-            Title = "Successfully loaded!",
-            Content = "Information is ready to read!",
-            Duration = 5
-        })
-    end
-})
+print("🔥 ShadowZ Hub for Rivals (V1.0) Loaded Successfully!")
