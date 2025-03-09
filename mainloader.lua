@@ -150,6 +150,20 @@ ScriptsTab:CreateButton({
     end
 })
 
+-- Add Basketball Legends Button
+ScriptsTab:CreateButton({
+    Name = "Basketball Legends 🏀",
+    Callback = function()
+        local script = game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/BL")
+        loadstring(script)()
+        Rayfield:Notify({
+            Title = "Successfully loaded!",
+            Content = "Basketball Legends script is ready!",
+            Duration = 5
+        })
+    end
+})
+
 FixesTab:CreateParagraph({
     Title = "FIXES",
     Content = "Fixed callback error"
