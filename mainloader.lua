@@ -164,6 +164,19 @@ ScriptsTab:CreateButton({
     end
 })
 
+-- Add HCBB Script Button as loadstring
+ScriptsTab:CreateButton({
+    Name = "HCBB Script",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/HCBB"))()
+        Rayfield:Notify({
+            Title = "Successfully loaded!",
+            Content = "HCBB script is ready!",
+            Duration = 5
+        })
+    end
+})
+
 FixesTab:CreateParagraph({
     Title = "FIXES",
     Content = "Fixed callback error"
