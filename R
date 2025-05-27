@@ -17,10 +17,13 @@ local espActive = false
 local fovActive = false
 local currentOpponent = nil
 local fovCircle = Drawing.new("Circle")
-local aimbotRange = 150 -- Default lock-on range
-local aimbotSmoothness = 5 -- Default smoothness
-local espBoxes = {} -- Table to store ESP boxes for all players
-local fovRadius = 100 -- Default FOV size
+local aimbotRange = 150
+local aimbotSmoothness = 5
+local espBoxes = {}
+local fovRadius = 100
+
+-- Add variable to store which body part to aim at
+local aimPartName = "Head"  -- Default
 
 -- Create Rayfield Window
 local Window = Rayfield:CreateWindow({ Name = "ShadowZ Hub", LoadingTitle = "Loading Rivals...", LoadingSubtitle = "by ShadowZ 😎", IntroEnabled = false })
@@ -29,185 +32,248 @@ local Window = Rayfield:CreateWindow({ Name = "ShadowZ Hub", LoadingTitle = "Loa
 local CombatTab = Window:CreateTab("Combat ⚔️", 4483362458)
 local VisualsTab = Window:CreateTab("Visuals 👀", 4483362458)
 local CreditsTab = Window:CreateTab("Credits 💎", 4483362458)
+CombatTab:CreateSection("🔥 This is V1.1 🔥")
 
--- Add "This is V1.0" Label to Combat Tab
-CombatTab:CreateSection("🔥 This is V1.0 🔥")
-
--- Function to get the opponent you are currently fighting
-local function getOpponent()
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            -- Check if the opponent is engaging with LocalPlayer
-            local distance = (player.Character.HumanoidRootPart.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
-            if distance < aimbotRange then
-                return player
-            end
-        end
-    end
-    return nil
+-- Team check
+local function isEnemy(player)
+    if not player.Team or not LocalPlayer.Team then return true end
+    return player.Team ~= LocalPlayer.Team
 end
 
--- Function to update current opponent
+-- Closest player finder with team check and aiming part selection
+local function getOpponent()
+    local closest = nil
+    local shortestDist = math.huge
+    local mousePos = UserInputService:GetMouseLocation()
+
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and isEnemy(player) and player.Character then
+            local targetPart = player.Character:FindFirstChild(aimPartName)
+            local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+            if targetPart and hrp then
+                local screenPos, onScreen = Camera:WorldToViewportPoint(targetPart.Position)
+                local distToMouse = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
+                local distToPlayer = (hrp.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+
+                if onScreen and distToMouse <= fovRadius and distToPlayer <= aimbotRange and distToMouse < shortestDist then
+                    shortestDist = distToMouse
+                    closest = player
+                end
+            end
+        end
+    end
+
+    return closest
+end
+
+-- Update opponent
 RunService.RenderStepped:Connect(function()
-    currentOpponent = getOpponent()
+    if aimbotActive or silentAimActive then
+        currentOpponent = getOpponent()
+    else
+        currentOpponent = nil
+    end
 end)
 
--- Aimbot Function (Smooth Lock-On)
+-- Aimbot logic (lock on selected part)
 RunService.RenderStepped:Connect(function()
-    if aimbotActive and currentOpponent then
-        local head = currentOpponent.Character and currentOpponent.Character:FindFirstChild("Head")
-        if head then
-            local targetPosition = head.Position
-            Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, targetPosition), 1 / aimbotSmoothness)
+    if aimbotActive and currentOpponent and currentOpponent.Character then
+        local targetPart = currentOpponent.Character:FindFirstChild(aimPartName)
+        if targetPart then
+            local targetPos = targetPart.Position + Vector3.new(0, 0.1, 0)
+            local newCFrame = CFrame.new(Camera.CFrame.Position, targetPos)
+            Camera.CFrame = Camera.CFrame:Lerp(newCFrame, 1 / aimbotSmoothness)
         end
     end
 end)
 
--- Silent Aim (Improves Aim Without Full Lock-On)
+-- Silent aim fire
 UserInputService.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 and silentAimActive and currentOpponent then
-        local head = currentOpponent.Character and currentOpponent.Character:FindFirstChild("Head")
-        if head then
-            local aimPosition = head.Position
-            Camera.CFrame = CFrame.new(Camera.CFrame.Position, aimPosition)
-            if ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("Attack") then
-                ReplicatedStorage.Remotes.Attack:FireServer(head)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 and silentAimActive and currentOpponent and currentOpponent.Character then
+        local targetPart = currentOpponent.Character:FindFirstChild(aimPartName)
+        if targetPart then
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetPart.Position)
+            local remotesFolder = ReplicatedStorage:FindFirstChild("Remotes")
+            if remotesFolder then
+                local attackRemote = remotesFolder:FindFirstChild("Attack")
+                if attackRemote then
+                    attackRemote:FireServer(targetPart)
+                end
             end
         end
     end
 end)
 
--- Function to Create ESP for All Players
+-- ESP teammate only
 local function updateESP()
     if espActive then
         for _, player in pairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                local rootPart = player.Character.HumanoidRootPart
-                local head = player.Character:FindFirstChild("Head")
-
-                if rootPart and head then
-                    local rootPos, rootVisible = Camera:WorldToViewportPoint(rootPart.Position)
+            local char = player.Character
+            if player ~= LocalPlayer and char and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChild("Humanoid") and player.Team == LocalPlayer.Team then
+                local head = char:FindFirstChild("Head")
+                local root = char:FindFirstChild("HumanoidRootPart")
+                if head and root then
+                    local rootPos, rootVisible = Camera:WorldToViewportPoint(root.Position)
                     local headPos, headVisible = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
 
-                    -- Create ESP box if not exists
                     if not espBoxes[player] then
-                        espBoxes[player] = Drawing.new("Quad")
-                        espBoxes[player].Thickness = 2
-                        espBoxes[player].Color = Color3.fromRGB(0, 0, 255) -- Blue color for ESP
-                        espBoxes[player].Transparency = 1
-                        espBoxes[player].Visible = true
+                        espBoxes[player] = {
+                            box = Drawing.new("Quad"),
+                            name = Drawing.new("Text"),
+                            health = Drawing.new("Text"),
+                            tracer = Drawing.new("Line"),
+                        }
+                        local box = espBoxes[player]
+                        box.box.Thickness = 2
+                        box.box.Color = Color3.fromRGB(0, 0, 255)
+                        box.box.Transparency = 1
+                        box.name.Center = true
+                        box.name.Outline = true
+                        box.name.Color = Color3.fromRGB(0, 0, 255)
+                        box.name.Size = 14
+                        box.health.Center = true
+                        box.health.Outline = true
+                        box.health.Color = Color3.fromRGB(0, 255, 0)
+                        box.health.Size = 14
+                        box.tracer.Color = Color3.fromRGB(0, 0, 255)
+                        box.tracer.Thickness = 1
+                        box.tracer.Transparency = 1
                     end
 
-                    -- Update ESP box position
+                    local box = espBoxes[player]
                     if rootVisible and headVisible then
-                        espBoxes[player].PointA = Vector2.new(rootPos.X - 15, rootPos.Y + 30)
-                        espBoxes[player].PointB = Vector2.new(rootPos.X + 15, rootPos.Y + 30)
-                        espBoxes[player].PointC = Vector2.new(headPos.X + 15, headPos.Y)
-                        espBoxes[player].PointD = Vector2.new(headPos.X - 15, headPos.Y)
-                        espBoxes[player].Visible = true
+                        local boxWidth = 30
+                        local boxHeight = (rootPos.Y - headPos.Y) + 15
+                        box.box.PointA = Vector2.new(rootPos.X - boxWidth / 2, headPos.Y)
+                        box.box.PointB = Vector2.new(rootPos.X + boxWidth / 2, headPos.Y)
+                        box.box.PointC = Vector2.new(rootPos.X + boxWidth / 2, rootPos.Y + 15)
+                        box.box.PointD = Vector2.new(rootPos.X - boxWidth / 2, rootPos.Y + 15)
+                        box.box.Visible = true
+
+                        box.name.Position = Vector2.new(rootPos.X, headPos.Y - 15)
+                        box.name.Text = player.Name
+                        box.name.Visible = true
+
+                        local hp = char.Humanoid.Health
+                        local maxHp = char.Humanoid.MaxHealth
+                        box.health.Position = Vector2.new(rootPos.X, headPos.Y - 3)
+                        box.health.Text = ("HP: %d/%d"):format(math.floor(hp), maxHp)
+                        box.health.Visible = true
+
+                        local screenSize = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                        box.tracer.From = screenSize
+                        box.tracer.To = Vector2.new(rootPos.X, rootPos.Y + 15)
+                        box.tracer.Visible = true
                     else
-                        espBoxes[player].Visible = false
+                        box.box.Visible = false
+                        box.name.Visible = false
+                        box.health.Visible = false
+                        box.tracer.Visible = false
                     end
                 end
+            elseif espBoxes[player] then
+                local box = espBoxes[player]
+                box.box.Visible = false
+                box.name.Visible = false
+                box.health.Visible = false
+                box.tracer.Visible = false
             end
         end
     else
         for _, box in pairs(espBoxes) do
-            box.Visible = false
+            box.box.Visible = false
+            box.name.Visible = false
+            box.health.Visible = false
+            box.tracer.Visible = false
         end
     end
 end
 
--- Combat Tab: Silent Aim Toggle
+-- GUI Components
+
 CombatTab:CreateToggle({
     Name = "🎯 Silent Aim",
     CurrentValue = false,
     Flag = "silentAimToggle",
-    Callback = function(value)
-        silentAimActive = value
-    end
+    Callback = function(val) silentAimActive = val end
 })
 
--- Combat Tab: Aimbot Toggle
 CombatTab:CreateToggle({
     Name = "🔫 Aimbot Lock-On",
     CurrentValue = false,
     Flag = "aimbotToggle",
-    Callback = function(value)
-        aimbotActive = value
-    end
+    Callback = function(val) aimbotActive = val end
 })
 
--- Combat Tab: Aimbot Range Slider
 CombatTab:CreateSlider({
     Name = "📏 Aimbot Range",
     Range = {50, 300},
     Increment = 10,
     CurrentValue = 150,
-    Callback = function(value)
-        aimbotRange = value
-    end
+    Callback = function(val) aimbotRange = val end
 })
 
--- Combat Tab: Smoothness Slider
 CombatTab:CreateSlider({
     Name = "⚡ Aimbot Smoothness",
     Range = {1, 10},
     Increment = 1,
     CurrentValue = 5,
-    Callback = function(value)
-        aimbotSmoothness = value
+    Callback = function(val) aimbotSmoothness = val end
+})
+
+-- Added dropdown for aim body part selection
+CombatTab:CreateDropdown({
+    Name = "🎯 Aim Target Part",
+    Options = {"Head", "Torso", "Neck"},
+    CurrentOption = "Head",
+    Flag = "aimPartDropdown",
+    Callback = function(option)
+        aimPartName = option
     end
 })
 
--- Visuals Tab: ESP Toggle
 VisualsTab:CreateToggle({
-    Name = "👀 Player ESP (All Players)",
+    Name = "👀 Player ESP (Teammates Only)",
     CurrentValue = false,
     Flag = "espToggle",
-    Callback = function(value)
-        espActive = value
-        updateESP()
-    end
+    Callback = function(val) espActive = val updateESP() end
 })
 
--- Visuals Tab: FOV Toggle
 VisualsTab:CreateToggle({
     Name = "🔵 FOV Circle",
     CurrentValue = false,
     Flag = "fovToggle",
-    Callback = function(value)
-        fovActive = value
-        fovCircle.Visible = value
-    end
+    Callback = function(val) fovActive = val fovCircle.Visible = val end
 })
 
--- Visuals Tab: FOV Size Slider
 VisualsTab:CreateSlider({
     Name = "📏 FOV Size",
     Range = {50, 200},
     Increment = 10,
     CurrentValue = 100,
-    Callback = function(value)
-        fovCircle.Radius = value
-        fovRadius = value
+    Callback = function(val)
+        fovCircle.Radius = val
+        fovRadius = val
     end
 })
 
--- Configure FOV Circle
+-- FOV circle setup
 fovCircle.Color = Color3.fromRGB(0, 0, 255)
 fovCircle.Thickness = 2
 fovCircle.Filled = false
 fovCircle.Transparency = 1
 fovCircle.Visible = false
 
+-- Drawing updates
 RunService.RenderStepped:Connect(function()
     if fovActive then
         fovCircle.Position = UserInputService:GetMouseLocation()
     end
+    if espActive then
+        updateESP()
+    end
 end)
 
--- Credits Tab: Display Creator Info
 CreditsTab:CreateSection("💎 Made by ShadowZ 💎")
 
-print("🔥 ShadowZ Hub for Rivals (V1.0) Loaded Successfully!")
+print("🔥 ShadowZ Hub for Rivals (V1.1) Loaded Successfully!")
