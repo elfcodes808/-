@@ -16,7 +16,7 @@ local Window = Rayfield:CreateWindow({
     KeySystem = false,  -- Set KeySystem to false
 })
 
--- Scripts Tab
+-- Tabs
 local ScriptsTab = Window:CreateTab("Scripts", 4483362458)
 local CreditsTab = Window:CreateTab("Credits", 4483362458)
 local FixesTab = Window:CreateTab("Fixes", 4483362458)
@@ -108,11 +108,10 @@ ScriptsTab:CreateButton({
     end
 })
 
--- Add Fisch Script Button
 ScriptsTab:CreateButton({
     Name = "Fisch Script",
     Callback = function()
-        local script = game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/FC")  -- Correct Fisch script URL
+        local script = game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/FC")
         loadstring(script)()
         Rayfield:Notify({
             Title = "Successfully loaded!",
@@ -122,7 +121,6 @@ ScriptsTab:CreateButton({
     end
 })
 
--- Shrimp Game Button (no place ID required)
 ScriptsTab:CreateButton({
     Name = "Shrimp Game",
     Callback = function()
@@ -136,11 +134,10 @@ ScriptsTab:CreateButton({
     end
 })
 
--- Rivals Script Button
 ScriptsTab:CreateButton({
     Name = "Rivals Script",
     Callback = function()
-        local script = game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/R")  -- Rivals script URL
+        local script = game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/R")
         loadstring(script)()
         Rayfield:Notify({
             Title = "Successfully loaded!",
@@ -150,7 +147,6 @@ ScriptsTab:CreateButton({
     end
 })
 
--- Add Basketball Legends Button
 ScriptsTab:CreateButton({
     Name = "Basketball Legends 🏀",
     Callback = function()
@@ -164,7 +160,6 @@ ScriptsTab:CreateButton({
     end
 })
 
--- Add HCBB Script Button as loadstring
 ScriptsTab:CreateButton({
     Name = "HCBB Script",
     Callback = function()
@@ -177,16 +172,43 @@ ScriptsTab:CreateButton({
     end
 })
 
+ScriptsTab:CreateButton({
+    Name = "Catch A Fade",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/CAF"))()
+        Rayfield:Notify({
+            Title = "Successfully loaded!",
+            Content = "Catch A Fade script is ready!",
+            Duration = 5
+        })
+    end
+})
+
+ScriptsTab:CreateButton({
+    Name = "Track and Field",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/TF"))()
+        Rayfield:Notify({
+            Title = "Successfully loaded!",
+            Content = "Track and Field script is ready!",
+            Duration = 5
+        })
+    end
+})
+
+-- Fixes Tab content
 FixesTab:CreateParagraph({
     Title = "FIXES",
     Content = "Fixed callback error"
 })
 
+-- Credits Tab content
 CreditsTab:CreateParagraph({
     Title = "Special Thanks",
     Content = "Developed by kadencodes"
 })
 
+-- Info Tab Button
 InfoTab:CreateButton({
     Name = "Info window",
     Callback = function()
