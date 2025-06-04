@@ -1,0 +1,135 @@
+local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RepStorage = game:GetService("ReplicatedStorage")
+local remoteFolder = RepStorage:WaitForChild("Remotes")
+local FistRemote = remoteFolder:FindFirstChild("Fist")
+
+local flightAuraEnabled = false
+local infStaminaEnabled = false
+local playerESPEnabled = false
+local ESPHighlights = {}
+
+local function updateESP()
+    if playerESPEnabled then
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                if not ESPHighlights[player.Name] then
+                    local highlight = Instance.new("Highlight")
+                    highlight.Adornee = player.Character
+                    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                    highlight.FillColor = Color3.fromRGB(255, 0, 0)
+                    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                    highlight.Parent = game:GetService("CoreGui")
+                    ESPHighlights[player.Name] = highlight
+                end
+            end
+        end
+    else
+        for _, highlight in pairs(ESPHighlights) do
+            if highlight then highlight:Destroy() end
+        end
+        ESPHighlights = {}
+    end
+end
+
+local function refreshESP()
+    for _, highlight in pairs(ESPHighlights) do
+        if highlight then highlight:Destroy() end
+    end
+    ESPHighlights = {}
+    updateESP()
+end
+
+local Window = Rayfield:CreateWindow({
+    Name = "Catch a Fade - ShadowZ Hub",
+    LoadingTitle = "ShadowZ Hub",
+    LoadingSubtitle = "Loading...",
+    ConfigurationSaving = { Enabled = false },
+    Discord = { Enabled = false },
+    KeySystem = false,
+})
+
+local MainTab = Window:CreateTab("Main", 4483362458)
+
+MainTab:CreateToggle({
+    Name = "Flight Aura",
+    CurrentValue = false,
+    Flag = "FlightAuraToggle",
+    Callback = function(Value)
+        flightAuraEnabled = Value
+        if flightAuraEnabled and FistRemote then
+            task.spawn(function()
+                while flightAuraEnabled do
+                    pcall(function()
+                        local myChar = LocalPlayer.Character
+                        if not myChar or not myChar:FindFirstChild("HumanoidRootPart") then return end
+                        local myPos = myChar.HumanoidRootPart.Position
+
+                        for _, player in pairs(Players:GetPlayers()) do
+                            if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                                local dist = (myPos - player.Character.HumanoidRootPart.Position).Magnitude
+                                if dist <= 20 then
+                                    local args = { "head", player.Character, "empty" }
+                                    FistRemote:FireServer(unpack(args))
+                                end
+                            end
+                        end
+                    end)
+                    task.wait(0.2)
+                end
+            end)
+        end
+    end,
+})
+
+MainTab:CreateToggle({
+    Name = "Infinite Stamina",
+    CurrentValue = false,
+    Flag = "InfStaminaToggle",
+    Callback = function(Value)
+        infStaminaEnabled = Value
+        if infStaminaEnabled then
+            task.spawn(function()
+                while infStaminaEnabled do
+                    pcall(function()
+                        for _, player in pairs(Players:GetPlayers()) do
+                            local staminaGui = player:FindFirstChild("PlayerGui")
+                            if staminaGui then
+                                local ui = staminaGui:FindFirstChild("UI")
+                                if ui and ui:FindFirstChild("Stats") then
+                                    local staminaBar = ui.Stats:FindFirstChild("Stamina")
+                                    if staminaBar then
+                                        if staminaBar:IsA("TextLabel") then
+                                            staminaBar.Text = "100"
+                                        elseif staminaBar:IsA("Frame") then
+                                            staminaBar.Size = UDim2.new(1, 0, 1, 0)
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end)
+                    task.wait(0.1)
+                end
+            end)
+        end
+    end,
+})
+
+MainTab:CreateToggle({
+    Name = "Player ESP",
+    CurrentValue = false,
+    Flag = "PlayerESPToggle",
+    Callback = function(Value)
+        playerESPEnabled = Value
+        refreshESP()
+        if playerESPEnabled then
+            Players.PlayerAdded:Connect(refreshESP)
+            Players.PlayerRemoving:Connect(refreshESP)
+        end
+    end,
+})
+
+Rayfield:LoadConfiguration()
