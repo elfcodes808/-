@@ -209,22 +209,6 @@ MiscTab:CreateToggle({
     end
 })
 
--- Infinite Stamina Toggle
-getgenv().InfStamina = false
-
-MiscTab:CreateToggle({
-    Name = "Infinite Stamina",
-    CurrentValue = false,
-    Callback = function(Value)
-        getgenv().InfStamina = Value
-        Rayfield:Notify({
-            Title = "Infinite Stamina",
-            Content = Value and "Enabled" or "Disabled",
-            Duration = 2,
-        })
-    end,
-})
-
 -- Credits Tab
 CreditTab:CreateLabel("Credit to Fearz for making the script!")
 
@@ -241,31 +225,3 @@ Rayfield:Notify({
     Duration = 5,
     Image = 4483362458
 })
-
--- Hook stamina-related remote events to enforce infinite stamina
-local CmdrClient = ReplicatedStorage:WaitForChild("CmdrClient")
-local Commands = CmdrClient:WaitForChild("Commands")
-
-local remotesToModify = {
-    ["dodge-stamina-cost_945a61c5-c6aa-40c0-a614-0ffc65dd3285"] = true,
-    ["punch-stamina-cost_54b27ecc-8fa6-4984-8b86-3042994fb557"] = true,
-    ["set-stamina-amount_4b675cf3-d588-4d08-8cad-7906aa2dd6ab"] = true,
-}
-
-local oldNamecall
-oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-    local method = getnamecallmethod()
-    if getgenv().InfStamina and method == "FireServer" and typeof(self) == "Instance" and self:IsA("RemoteEvent") then
-        if remotesToModify[self.Name] then
-            local args = { ... }
-            -- Override stamina value to 0
-            if typeof(args[1]) == "number" then
-                args[1] = 0
-            elseif typeof(args[2]) == "number" then
-                args[2] = 0
-            end
-            return oldNamecall(self, unpack(args))
-        end
-    end
-    return oldNamecall(self, ...)
-end)
