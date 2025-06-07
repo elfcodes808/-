@@ -13,7 +13,7 @@ local Window = Rayfield:CreateWindow({
     ConfigurationSaving = {
         Enabled = false
     },
-    KeySystem = false,  -- Set KeySystem to false
+    KeySystem = false,
 })
 
 -- Tabs
@@ -33,8 +33,7 @@ Rayfield:Notify({
 ScriptsTab:CreateButton({
     Name = "Siege Script",
     Callback = function()
-        local script = game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/OS")
-        loadstring(script)()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/OS"))()
         Rayfield:Notify({
             Title = "Successfully loaded!",
             Content = "Operations Siege script is ready!",
@@ -46,8 +45,7 @@ ScriptsTab:CreateButton({
 ScriptsTab:CreateButton({
     Name = "Hoops Nation 2",
     Callback = function()
-        local script = game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/1.%20H")
-        loadstring(script)()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/1.%20H"))()
         Rayfield:Notify({
             Title = "Successfully loaded!",
             Content = "Hoops Nation 2 script is ready!",
@@ -59,8 +57,7 @@ ScriptsTab:CreateButton({
 ScriptsTab:CreateButton({
     Name = "Realistic Basketball",
     Callback = function()
-        local script = game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/2.%20RB")
-        loadstring(script)()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/2.%20RB"))()
         Rayfield:Notify({
             Title = "Successfully loaded!",
             Content = "Realistic Basketball script is ready!",
@@ -72,8 +69,7 @@ ScriptsTab:CreateButton({
 ScriptsTab:CreateButton({
     Name = "Lifting Simulator",
     Callback = function()
-        local script = game:HttpGet('https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/LS')
-        loadstring(script)()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/LS"))()
         Rayfield:Notify({
             Title = "Successfully loaded!",
             Content = "Lifting Simulator script is ready!",
@@ -85,8 +81,7 @@ ScriptsTab:CreateButton({
 ScriptsTab:CreateButton({
     Name = "Boxing Beta Script",
     Callback = function()
-        local script = game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/BE")
-        loadstring(script)()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/BE"))()
         Rayfield:Notify({
             Title = "Boxing Beta is Loaded!",
             Content = "Callback error might occur every once and a while.",
@@ -98,8 +93,7 @@ ScriptsTab:CreateButton({
 ScriptsTab:CreateButton({
     Name = "Homerun Simulator",
     Callback = function()
-        local script = game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/HS")
-        loadstring(script)()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/HS"))()
         Rayfield:Notify({
             Title = "Successfully loaded!",
             Content = "Homerun Simulator script is ready!",
@@ -111,8 +105,7 @@ ScriptsTab:CreateButton({
 ScriptsTab:CreateButton({
     Name = "Fisch Script",
     Callback = function()
-        local script = game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/FC")
-        loadstring(script)()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/FC"))()
         Rayfield:Notify({
             Title = "Successfully loaded!",
             Content = "Fisch script is ready!",
@@ -124,8 +117,7 @@ ScriptsTab:CreateButton({
 ScriptsTab:CreateButton({
     Name = "Shrimp Game",
     Callback = function()
-        local script = game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/SG")
-        loadstring(script)()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/SG"))()
         Rayfield:Notify({
             Title = "Successfully loaded!",
             Content = "Shrimp Game script is ready!",
@@ -137,8 +129,7 @@ ScriptsTab:CreateButton({
 ScriptsTab:CreateButton({
     Name = "Rivals Script",
     Callback = function()
-        local script = game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/R")
-        loadstring(script)()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/R"))()
         Rayfield:Notify({
             Title = "Successfully loaded!",
             Content = "Rivals script is ready!",
@@ -150,8 +141,7 @@ ScriptsTab:CreateButton({
 ScriptsTab:CreateButton({
     Name = "Basketball Legends 🏀",
     Callback = function()
-        local script = game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/BL")
-        loadstring(script)()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/BL"))()
         Rayfield:Notify({
             Title = "Successfully loaded!",
             Content = "Basketball Legends script is ready!",
@@ -196,6 +186,18 @@ ScriptsTab:CreateButton({
     end
 })
 
+ScriptsTab:CreateButton({
+    Name = "Arsenal Script",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/A"))()
+        Rayfield:Notify({
+            Title = "Successfully loaded!",
+            Content = "Arsenal script is ready!",
+            Duration = 5
+        })
+    end
+})
+
 -- Fixes Tab content
 FixesTab:CreateParagraph({
     Title = "FIXES",
@@ -212,8 +214,7 @@ CreditsTab:CreateParagraph({
 InfoTab:CreateButton({
     Name = "Info window",
     Callback = function()
-        local script = game:HttpGet("https://raw.githubusercontent.com/elfcodes808/shadowzscript/refs/heads/main/informationview.lua")
-        loadstring(script)()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/shadowzscript/refs/heads/main/informationview.lua"))()
         Rayfield:Notify({
             Title = "Successfully loaded!",
             Content = "Information is ready to read!",
