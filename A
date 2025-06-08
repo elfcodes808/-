@@ -18,6 +18,9 @@ local fovActive = false
 local rapidFire = false
 local rapidFireStrength = 5
 
+local noRecoilActive = false
+local infAmmoActive = false
+
 local espBoxes = {}
 local drawBox = true
 local drawName = true
@@ -29,8 +32,34 @@ local fovCircle = Drawing.new("Circle")
 local aimbotRange = 150
 local aimbotSmoothness = 5
 local fovRadius = 100
-
 local aimPartName = "Head"
+
+-- Store original recoil values for restoring
+local recoilStorage = {}
+
+-- Function to enable/disable no recoil efficiently
+local function setNoRecoil(active)
+    local weaponsFolder = ReplicatedStorage:FindFirstChild("Weapons")
+    if not weaponsFolder then return end
+
+    if active then
+        recoilStorage = {} -- clear old storage
+        for _, v in pairs(weaponsFolder:GetDescendants()) do
+            if v.Name == "RecoilControl" or v.Name == "MaxSpread" then
+                recoilStorage[v] = v.Value -- store original
+                pcall(function() v.Value = 0 end) -- set no recoil
+            end
+        end
+    else
+        -- restore original values
+        for v, val in pairs(recoilStorage) do
+            if v and v.Parent then
+                pcall(function() v.Value = val end)
+            end
+        end
+        recoilStorage = {}
+    end
+end
 
 -- Create Rayfield Window
 local Window = Rayfield:CreateWindow({ Name = "ShadowZ Hub | Arsenal V1.0", LoadingTitle = "ShadowZ Hub", LoadingSubtitle = "Arsenal Script", IntroEnabled = false })
@@ -49,10 +78,8 @@ end
 
 -- Closest enemy player
 local function getOpponent()
-    local closest = nil
-    local shortestDist = math.huge
+    local closest, shortestDist = nil, math.huge
     local mousePos = UserInputService:GetMouseLocation()
-
     for _, player in pairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and isEnemy(player) and player.Character then
             local part = player.Character:FindFirstChild(aimPartName)
@@ -61,7 +88,6 @@ local function getOpponent()
                 local screenPos, onScreen = Camera:WorldToViewportPoint(part.Position)
                 local dist = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
                 local dist3D = (hrp.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
-
                 if onScreen and dist <= fovRadius and dist3D <= aimbotRange and dist < shortestDist then
                     closest = player
                     shortestDist = dist
@@ -69,10 +95,10 @@ local function getOpponent()
             end
         end
     end
-
     return closest
 end
 
+-- Connection for target updates
 RunService.RenderStepped:Connect(function()
     if aimbotActive or silentAimActive then
         currentOpponent = getOpponent()
@@ -81,6 +107,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
+-- Aimbot Lock-On
 RunService.RenderStepped:Connect(function()
     if aimbotActive and currentOpponent and currentOpponent.Character then
         local target = currentOpponent.Character:FindFirstChild(aimPartName)
@@ -94,17 +121,15 @@ end)
 
 -- Silent Aim + Rapid Fire
 UserInputService.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        if silentAimActive and currentOpponent and currentOpponent.Character then
-            local target = currentOpponent.Character:FindFirstChild(aimPartName)
-            if target then
-                local remote = ReplicatedStorage:FindFirstChild("Remotes")
-                local attack = remote and remote:FindFirstChild("Attack")
-                if attack then
-                    for i = 1, (rapidFire and rapidFireStrength or 1) do
-                        Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Position)
-                        attack:FireServer(target)
-                    end
+    if input.UserInputType == Enum.UserInputType.MouseButton1 and silentAimActive and currentOpponent and currentOpponent.Character then
+        local target = currentOpponent.Character:FindFirstChild(aimPartName)
+        if target then
+            local remote = ReplicatedStorage:FindFirstChild("Remotes")
+            local attack = remote and remote:FindFirstChild("Attack")
+            if attack then
+                for i = 1, (rapidFire and rapidFireStrength or 1) do
+                    Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Position)
+                    attack:FireServer(target)
                 end
             end
         end
@@ -115,12 +140,14 @@ end)
 local function updateESP()
     for _, player in pairs(Players:GetPlayers()) do
         local char = player.Character
-        if player ~= LocalPlayer and char and isEnemy(player) and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChild("Humanoid") then
+        if player ~= LocalPlayer and char and isEnemy(player)
+        and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChild("Humanoid") then
+
             local head = char:FindFirstChild("Head")
             local root = char:FindFirstChild("HumanoidRootPart")
             if head and root then
                 local rootPos, rootVisible = Camera:WorldToViewportPoint(root.Position)
-                local headPos, headVisible = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
+                local headPos, headVisible = Camera:WorldToViewportPoint(head.Position + Vector3.new(0,0.5,0))
 
                 if not espBoxes[player] then
                     espBoxes[player] = {
@@ -132,24 +159,22 @@ local function updateESP()
                 end
 
                 local box = espBoxes[player]
-
                 if rootVisible and headVisible and espActive then
-                    local w, h = 30, (rootPos.Y - headPos.Y) + 15
-
+                    local w,h = 30, (rootPos.Y - headPos.Y) + 15
                     box.box.Visible = drawBox
-                    box.box.Color = Color3.fromRGB(255, 0, 0)
+                    box.box.Color = Color3.fromRGB(255,0,0)
                     box.box.Thickness = 2
-                    box.box.PointA = Vector2.new(rootPos.X - w / 2, headPos.Y)
-                    box.box.PointB = Vector2.new(rootPos.X + w / 2, headPos.Y)
-                    box.box.PointC = Vector2.new(rootPos.X + w / 2, rootPos.Y + 15)
-                    box.box.PointD = Vector2.new(rootPos.X - w / 2, rootPos.Y + 15)
+                    box.box.PointA = Vector2.new(rootPos.X - w/2, headPos.Y)
+                    box.box.PointB = Vector2.new(rootPos.X + w/2, headPos.Y)
+                    box.box.PointC = Vector2.new(rootPos.X + w/2, rootPos.Y + 15)
+                    box.box.PointD = Vector2.new(rootPos.X - w/2, rootPos.Y + 15)
 
                     box.name.Visible = drawName
                     box.name.Text = player.Name
                     box.name.Size = 14
                     box.name.Center = true
                     box.name.Outline = true
-                    box.name.Color = Color3.fromRGB(255, 0, 0)
+                    box.name.Color = Color3.fromRGB(255,0,0)
                     box.name.Position = Vector2.new(rootPos.X, headPos.Y - 15)
 
                     box.health.Visible = drawHealth
@@ -157,20 +182,20 @@ local function updateESP()
                     box.health.Size = 14
                     box.health.Center = true
                     box.health.Outline = true
-                    box.health.Color = Color3.fromRGB(0, 255, 0)
+                    box.health.Color = Color3.fromRGB(0,255,0)
                     box.health.Position = Vector2.new(rootPos.X, headPos.Y - 3)
 
                     box.tracer.Visible = drawTracer
-                    box.tracer.Color = Color3.fromRGB(255, 0, 0)
+                    box.tracer.Color = Color3.fromRGB(255,0,0)
                     box.tracer.Thickness = 1
-                    box.tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                    box.tracer.From = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y)
                     box.tracer.To = Vector2.new(rootPos.X, rootPos.Y + 15)
                 else
-                    for _, v in pairs(box) do v.Visible = false end
+                    for _,v in pairs(box) do v.Visible = false end
                 end
             end
         elseif espBoxes[player] then
-            for _, v in pairs(espBoxes[player]) do v.Visible = false end
+            for _,v in pairs(espBoxes[player]) do v.Visible = false end
         end
     end
 end
@@ -180,31 +205,55 @@ RunService.RenderStepped:Connect(function()
     if espActive then updateESP() end
 end)
 
--- Combat UI
-CombatTab:CreateToggle({ Name = "🎯 Silent Aim", CurrentValue = false, Callback = function(v) silentAimActive = v end })
-CombatTab:CreateToggle({ Name = "🔒 Aimbot Lock-On", CurrentValue = false, Callback = function(v) aimbotActive = v end })
-CombatTab:CreateSlider({ Name = "📏 Aimbot Range", Range = {50, 300}, Increment = 10, CurrentValue = 150, Callback = function(v) aimbotRange = v end })
-CombatTab:CreateSlider({ Name = "⚡ Aimbot Smoothness", Range = {1, 10}, Increment = 1, CurrentValue = 5, Callback = function(v) aimbotSmoothness = v end })
-CombatTab:CreateDropdown({ Name = "🎯 Aim Part", Options = {"Head", "Torso", "Neck"}, CurrentOption = "Head", Callback = function(v) aimPartName = v end })
-CombatTab:CreateToggle({ Name = "🔫 Rapid Fire", CurrentValue = false, Callback = function(v) rapidFire = v end })
-CombatTab:CreateSlider({ Name = "💥 Fire Strength", Range = {1, 10}, Increment = 1, CurrentValue = 5, Callback = function(v) rapidFireStrength = v end })
+-- Infinite Ammo Spine
+spawn(function()
+    while wait(0.2) do
+        if infAmmoActive then
+            local gui = LocalPlayer.PlayerGui:FindFirstChild("GUI")
+            if gui and gui:FindFirstChild("Client") and gui.Client:FindFirstChild("Variables") then
+                gui.Client.Variables.ammocount.Value = 999
+                gui.Client.Variables.ammocount2.Value = 999
+            end
+        end
+    end
+end)
+
+-- GUI Toggles & Sliders
+CombatTab:CreateToggle({ Name="🎯 Silent Aim", CurrentValue=false, Callback=function(v) silentAimActive=v end })
+CombatTab:CreateToggle({ Name="🔒 Aimbot Lock-On", CurrentValue=false, Callback=function(v) aimbotActive=v end })
+CombatTab:CreateSlider({ Name="📏 Aimbot Range", Range={50,300}, Increment=10, CurrentValue=150, Callback=function(v) aimbotRange=v end })
+CombatTab:CreateSlider({ Name="⚡ Aimbot Smoothness", Range={1,10}, Increment=1, CurrentValue=5, Callback=function(v) aimbotSmoothness=v end })
+CombatTab:CreateDropdown({ Name="🎯 Aim Part", Options={"Head","Torso","Neck"}, CurrentOption="Head", Callback=function(v) aimPartName=v end })
+CombatTab:CreateToggle({ Name="🔫 Rapid Fire", CurrentValue=false, Callback=function(v) rapidFire=v end })
+CombatTab:CreateSlider({ Name="💥 Fire Strength", Range={1,10}, Increment=1, CurrentValue=5, Callback=function(v) rapidFireStrength=v end })
+
+-- **Updated No Recoil Toggle Using Fixed Function**
+CombatTab:CreateToggle({
+    Name = "🎯 No Recoil",
+    CurrentValue = false,
+    Callback = function(value)
+        noRecoilActive = value
+        setNoRecoil(value)  -- Only set recoil values once here to prevent lag
+    end,
+})
+
+CombatTab:CreateToggle({ Name="🎯 Infinite Ammo", CurrentValue=false, Callback=function(v) infAmmoActive=v end })
 
 -- Visual UI
-VisualsTab:CreateToggle({ Name = "🔴 Enable ESP", CurrentValue = false, Callback = function(v) espActive = v end })
-VisualsTab:CreateToggle({ Name = "🟥 Show Box", CurrentValue = true, Callback = function(v) drawBox = v end })
-VisualsTab:CreateToggle({ Name = "🧠 Show Name", CurrentValue = true, Callback = function(v) drawName = v end })
-VisualsTab:CreateToggle({ Name = "❤️ Show Health", CurrentValue = true, Callback = function(v) drawHealth = v end })
-VisualsTab:CreateToggle({ Name = "📍 Show Tracer", CurrentValue = true, Callback = function(v) drawTracer = v end })
-VisualsTab:CreateToggle({ Name = "🔵 FOV Circle", CurrentValue = false, Callback = function(v) fovActive = v fovCircle.Visible = v end })
-VisualsTab:CreateSlider({ Name = "🎯 FOV Size", Range = {50, 200}, Increment = 10, CurrentValue = 100, Callback = function(v) fovRadius = v fovCircle.Radius = v end })
+VisualsTab:CreateToggle({ Name="🔴 Enable ESP", CurrentValue=false, Callback=function(v) espActive=v end })
+VisualsTab:CreateToggle({ Name="🟥 Show Box", CurrentValue=true, Callback=function(v) drawBox=v end })
+VisualsTab:CreateToggle({ Name="🧠 Show Name", CurrentValue=true, Callback=function(v) drawName=v end })
+VisualsTab:CreateToggle({ Name="❤️ Show Health", CurrentValue=true, Callback=function(v) drawHealth=v end })
+VisualsTab:CreateToggle({ Name="📍 Show Tracer", CurrentValue=true, Callback=function(v) drawTracer=v end })
+VisualsTab:CreateToggle({ Name="🔵 FOV Circle", CurrentValue=false, Callback=function(v) fovActive=v fovCircle.Visible=v end })
+VisualsTab:CreateSlider({ Name="🎯 FOV Size", Range={50,200}, Increment=10, CurrentValue=100, Callback=function(v) fovRadius=v fovCircle.Radius=v end })
 
 -- FOV Style
-fovCircle.Color = Color3.fromRGB(0, 0, 255)
+fovCircle.Color = Color3.fromRGB(0,0,255)
 fovCircle.Thickness = 2
 fovCircle.Filled = false
 fovCircle.Transparency = 1
 fovCircle.Visible = false
 
 CreditsTab:CreateSection("Script made by ShadowZ 😎")
-
 print("✅ ShadowZ Hub Arsenal V1.0 Loaded")
