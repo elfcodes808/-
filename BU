@@ -1,0 +1,176 @@
+-- Load Rayfield UI
+local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+
+-- Custom UI Load Message
+Rayfield:Notify({
+    Title = "Baseball Universe | ShadowZ",
+    Content = "UI Loaded Successfully",
+    Duration = 4
+})
+
+-- UI Setup
+local Window = Rayfield:CreateWindow({
+    Name = "Baseball Universe | ShadowZ Hub",
+    ConfigurationSaving = {
+        Enabled = false
+    }
+})
+
+local BattingTab = Window:CreateTab("Batting", 4483362458)
+local FieldingTab = Window:CreateTab("Fielding", 4483362458)
+local MiscTab = Window:CreateTab("Misc", 4483362458)
+
+-- Services and Vars
+local player = game.Players.LocalPlayer
+local mouse = player:GetMouse()
+local camera = workspace.CurrentCamera
+
+local Settings = {
+    AutoAim = false,
+    ShowDot = false,
+    AutoHitDelay = 0.25, -- renamed from Prediction
+}
+
+-- Ball ESP (Always visible, Ball Shape)
+local ballESP = Instance.new("Part")
+ballESP.Shape = Enum.PartType.Ball
+ballESP.Size = Vector3.new(0.7, 0.7, 0.7)
+ballESP.Anchored = true
+ballESP.CanCollide = false
+ballESP.Material = Enum.Material.SmoothPlastic
+ballESP.Color = Color3.fromRGB(0, 170, 255)
+ballESP.Transparency = 0.25
+ballESP.Name = "BallESP"
+ballESP.Parent = workspace
+
+-- Ball ESP Toggle
+BattingTab:CreateToggle({
+    Name = "Ball ESP",
+    CurrentValue = false,
+    Callback = function(Value)
+        Settings.ShowDot = Value
+    end
+})
+
+-- Auto Aim Toggle
+BattingTab:CreateToggle({
+    Name = "Auto Aim",
+    CurrentValue = false,
+    Callback = function(Value)
+        Settings.AutoAim = Value
+    end
+})
+
+-- Auto Hit Delay Slider (Disabled)
+local autoHitDelaySlider = BattingTab:CreateSlider({
+    Name = "Auto Hit Delay",
+    Range = {0, 1},
+    Increment = 0.01,
+    Suffix = "s",
+    CurrentValue = Settings.AutoHitDelay,
+    Callback = function(Value)
+        -- Disabled
+    end
+})
+
+-- Disable slider interaction
+do
+    local sliderFrame = autoHitDelaySlider.Container
+    if sliderFrame then
+        for _, child in ipairs(sliderFrame:GetDescendants()) do
+            if child:IsA("GuiButton") or child:IsA("TextBox") then
+                child.Active = false
+                child.Selectable = false
+                child.AutoButtonColor = false
+                child.BackgroundTransparency = 0.5
+            end
+        end
+    end
+end
+
+-- Auto Hit (Coming Soon)
+BattingTab:CreateToggle({
+    Name = "Auto Hit (Coming Soon)",
+    CurrentValue = false,
+    Callback = function(Value)
+        Rayfield:Notify({
+            Title = "Coming Soon",
+            Content = "Auto Hit will be available in the next update!",
+            Duration = 4
+        })
+    end
+})
+
+-- Fielding Tab
+FieldingTab:CreateToggle({
+    Name = "Perfect Accuracy (Coming Soon)",
+    CurrentValue = false,
+    Callback = function(Value)
+        Rayfield:Notify({
+            Title = "Coming Soon",
+            Content = "Perfect Accuracy feature is still being developed!",
+            Duration = 4
+        })
+    end
+})
+
+-- Misc Tab
+MiscTab:CreateSlider({
+    Name = "WalkSpeed",
+    Range = {16, 50},
+    Increment = 1,
+    CurrentValue = 16,
+    Callback = function(value)
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            player.Character.Humanoid.WalkSpeed = value
+        end
+    end
+})
+
+MiscTab:CreateToggle({
+    Name = "WalkFling (Push Players)",
+    CurrentValue = false,
+    Callback = function(enabled)
+        if enabled then
+            Rayfield:Notify({
+                Title = "WalkFling Activated",
+                Content = "Walk into someone to fling them!",
+                Duration = 4
+            })
+        end
+    end
+})
+
+MiscTab:CreateToggle({
+    Name = "FPS Boost",
+    CurrentValue = false,
+    Callback = function(state)
+        if state then
+            for _, obj in ipairs(workspace:GetDescendants()) do
+                if obj:IsA("BasePart") then
+                    obj.Material = Enum.Material.SmoothPlastic
+                    obj.Reflectance = 0
+                end
+            end
+        end
+    end
+})
+
+-- Ball Prediction Logic
+local pitchEvent = game:GetService("ReplicatedStorage").Packages.Knit.Services.PitchingService.RE.Pitch
+
+pitchEvent.OnClientEvent:Connect(function(...)
+    local args = {...}
+    for _, v in pairs(args) do
+        if typeof(v) == "table" and v[4] then
+            local finalPos = v[4]
+            local predictedPos = finalPos + Vector3.new(0, 0, -Settings.AutoHitDelay * 60)
+
+            if Settings.ShowDot then
+                ballESP.Position = Vector3.new(finalPos.X - 0.33, finalPos.Y + 0.47, 112.6)
+            else
+                ballESP.Position = Vector3.new(9999, 9999, 9999)
+            end
+        end
+    end
+end)
