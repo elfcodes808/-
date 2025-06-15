@@ -1,3 +1,55 @@
+-- Robust Kick Hook to prevent client-side kicks
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- Try overriding Kick directly on the player's metatable
+if LocalPlayer and LocalPlayer.Kick then
+    local success, err = pcall(function()
+        local mt = getrawmetatable(LocalPlayer)
+        if mt and setreadonly then
+            setreadonly(mt, false)
+            mt.Kick = function() 
+                warn("[ShadowZ Hub] Kick blocked by direct override!") 
+                -- block kick
+            end
+            setreadonly(mt, true)
+        else
+            -- fallback: override method on the object itself (less effective)
+            LocalPlayer.Kick = function() 
+                warn("[ShadowZ Hub] Kick blocked by method override!") 
+            end
+        end
+    end)
+    if not success then
+        warn("Failed to hook Kick directly: " .. tostring(err))
+    end
+end
+
+-- Backup hook using hookfunction (if supported)
+if hookfunction and LocalPlayer.Kick then
+    local originalKick = LocalPlayer.Kick
+    hookfunction(originalKick, function(...)
+        warn("[ShadowZ Hub] Kick blocked by hookfunction!")
+        return
+    end)
+end
+
+-- Backup hook using __namecall metamethod override
+local mt = getrawmetatable(game)
+if mt and setreadonly then
+    setreadonly(mt, false)
+    local oldNamecall = mt.__namecall
+    mt.__namecall = newcclosure(function(self, ...)
+        local method = getnamecallmethod()
+        if self == LocalPlayer and method == "Kick" then
+            warn("[ShadowZ Hub] Kick blocked by __namecall hook!")
+            return
+        end
+        return oldNamecall(self, ...)
+    end)
+    setreadonly(mt, true)
+end
+
 -- Load Rayfield UI
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
@@ -20,18 +72,19 @@ local BattingTab = Window:CreateTab("Batting", 4483362458)
 local FieldingTab = Window:CreateTab("Fielding", 4483362458)
 local MiscTab = Window:CreateTab("Misc", 4483362458)
 
--- Services and Vars
-local player = game.Players.LocalPlayer
+-- Vars
+local player = LocalPlayer
 local mouse = player:GetMouse()
 local camera = workspace.CurrentCamera
 
 local Settings = {
     AutoAim = false,
     ShowDot = false,
-    AutoHitDelay = 0.25, -- renamed from Prediction
+    AutoHitDelay = 0.25,
+    FlyEnabled = false
 }
 
--- Ball ESP (Always visible, Ball Shape)
+-- Ball ESP
 local ballESP = Instance.new("Part")
 ballESP.Shape = Enum.PartType.Ball
 ballESP.Size = Vector3.new(0.7, 0.7, 0.7)
@@ -41,9 +94,10 @@ ballESP.Material = Enum.Material.SmoothPlastic
 ballESP.Color = Color3.fromRGB(0, 170, 255)
 ballESP.Transparency = 0.25
 ballESP.Name = "BallESP"
+ballESP.Position = Vector3.new(9999,9999,9999)
 ballESP.Parent = workspace
 
--- Ball ESP Toggle
+-- Batting Tab UI
 BattingTab:CreateToggle({
     Name = "Ball ESP",
     CurrentValue = false,
@@ -52,7 +106,6 @@ BattingTab:CreateToggle({
     end
 })
 
--- Auto Aim Toggle
 BattingTab:CreateToggle({
     Name = "Auto Aim",
     CurrentValue = false,
@@ -61,34 +114,17 @@ BattingTab:CreateToggle({
     end
 })
 
--- Auto Hit Delay Slider (Disabled)
-local autoHitDelaySlider = BattingTab:CreateSlider({
+BattingTab:CreateSlider({
     Name = "Auto Hit Delay",
     Range = {0, 1},
     Increment = 0.01,
     Suffix = "s",
     CurrentValue = Settings.AutoHitDelay,
     Callback = function(Value)
-        -- Disabled
+        Settings.AutoHitDelay = Value
     end
 })
 
--- Disable slider interaction
-do
-    local sliderFrame = autoHitDelaySlider.Container
-    if sliderFrame then
-        for _, child in ipairs(sliderFrame:GetDescendants()) do
-            if child:IsA("GuiButton") or child:IsA("TextBox") then
-                child.Active = false
-                child.Selectable = false
-                child.AutoButtonColor = false
-                child.BackgroundTransparency = 0.5
-            end
-        end
-    end
-end
-
--- Auto Hit (Coming Soon)
 BattingTab:CreateToggle({
     Name = "Auto Hit (Coming Soon)",
     CurrentValue = false,
@@ -127,36 +163,103 @@ MiscTab:CreateSlider({
     end
 })
 
+-- Fly Toggle
 MiscTab:CreateToggle({
-    Name = "WalkFling (Push Players)",
+    Name = "Fly",
     CurrentValue = false,
-    Callback = function(enabled)
-        if enabled then
-            Rayfield:Notify({
-                Title = "WalkFling Activated",
-                Content = "Walk into someone to fling them!",
-                Duration = 4
-            })
-        end
-    end
-})
+    Callback = function(Value)
+        Settings.FlyEnabled = Value
+        local character = player.Character
+        if not character or not character:FindFirstChild("HumanoidRootPart") then return end
+        local hrp = character.HumanoidRootPart
 
-MiscTab:CreateToggle({
-    Name = "FPS Boost",
-    CurrentValue = false,
-    Callback = function(state)
-        if state then
-            for _, obj in ipairs(workspace:GetDescendants()) do
-                if obj:IsA("BasePart") then
-                    obj.Material = Enum.Material.SmoothPlastic
-                    obj.Reflectance = 0
+        if Value then
+            -- Disable gravity and allow flying movement
+            local BodyVelocity = Instance.new("BodyVelocity")
+            BodyVelocity.Name = "FlyBodyVelocity"
+            BodyVelocity.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+            BodyVelocity.Velocity = Vector3.new(0,0,0)
+            BodyVelocity.Parent = hrp
+
+            local BodyGyro = Instance.new("BodyGyro")
+            BodyGyro.Name = "FlyBodyGyro"
+            BodyGyro.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
+            BodyGyro.CFrame = hrp.CFrame
+            BodyGyro.Parent = hrp
+
+            -- Control flying with keys
+            local UserInputService = game:GetService("UserInputService")
+
+            local connection
+            connection = game:GetService("RunService").RenderStepped:Connect(function()
+                if not Settings.FlyEnabled then
+                    if BodyVelocity then BodyVelocity:Destroy() end
+                    if BodyGyro then BodyGyro:Destroy() end
+                    connection:Disconnect()
+                    return
                 end
+
+                local direction = Vector3.new(0,0,0)
+                if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+                    direction = direction + (camera.CFrame.LookVector)
+                end
+                if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+                    direction = direction - (camera.CFrame.LookVector)
+                end
+                if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+                    direction = direction + Vector3.new(0,1,0)
+                end
+                if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
+                    direction = direction - Vector3.new(0,1,0)
+                end
+
+                BodyVelocity.Velocity = direction * 50
+                BodyGyro.CFrame = camera.CFrame
+            end)
+        else
+            -- Disable fly by destroying the BodyVelocity and BodyGyro
+            if hrp:FindFirstChild("FlyBodyVelocity") then
+                hrp.FlyBodyVelocity:Destroy()
+            end
+            if hrp:FindFirstChild("FlyBodyGyro") then
+                hrp.FlyBodyGyro:Destroy()
             end
         end
     end
 })
 
--- Ball Prediction Logic
+-- TP to Mound button
+MiscTab:CreateButton({
+    Name = "TP to Mound",
+    Callback = function()
+        local mound = workspace.Repository.Infield:FindFirstChild("Mound")
+        if mound and mound:IsA("BasePart") then
+            local character = player.Character
+            if character and character:FindFirstChild("HumanoidRootPart") then
+                character.HumanoidRootPart.CFrame = mound.CFrame + Vector3.new(0, 5, 0) -- teleport slightly above mound to avoid falling through
+                Rayfield:Notify({
+                    Title = "Teleported",
+                    Content = "You have been teleported to the mound.",
+                    Duration = 3
+                })
+            else
+                Rayfield:Notify({
+                    Title = "Error",
+                    Content = "Character or HumanoidRootPart not found.",
+                    Duration = 3
+                })
+            end
+        else
+            Rayfield:Notify({
+                Title = "Error",
+                Content = "Mound not found in workspace.Repository.Infield.",
+                Duration = 3
+            })
+        end
+    end
+})
+
+-- Pitch Event Prediction Logic
 local pitchEvent = game:GetService("ReplicatedStorage").Packages.Knit.Services.PitchingService.RE.Pitch
 
 pitchEvent.OnClientEvent:Connect(function(...)
@@ -166,10 +269,22 @@ pitchEvent.OnClientEvent:Connect(function(...)
             local finalPos = v[4]
             local predictedPos = finalPos + Vector3.new(0, 0, -Settings.AutoHitDelay * 60)
 
-            if Settings.ShowDot then
+            local inBatBox = player.Character and player.Character:FindFirstChild("HumanoidRootPart") and
+                (player.Character.HumanoidRootPart.Position - finalPos).Magnitude <= 10
+
+            if Settings.ShowDot and inBatBox then
                 ballESP.Position = Vector3.new(finalPos.X - 0.33, finalPos.Y + 0.47, 112.6)
             else
                 ballESP.Position = Vector3.new(9999, 9999, 9999)
+            end
+
+            if Settings.AutoAim and inBatBox then
+                local screenPos, onScreen = camera:WorldToViewportPoint(predictedPos)
+                if onScreen then
+                    local dx = screenPos.X - (camera.ViewportSize.X / 2)
+                    local dy = screenPos.Y - (camera.ViewportSize.Y / 2)
+                    mousemoverel(dx, dy)
+                end
             end
         end
     end
