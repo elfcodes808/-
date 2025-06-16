@@ -1,87 +1,80 @@
--- Robust Kick Hook to prevent client-side kicks
+local uilibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/Kiet1308/tvkhub/main/rac"))()
+local windowz = uilibrary:CreateWindow("ShadowZ", "Baseball Universe", true)
+
+-- Tabs and sections
+local BattingPage = windowz:CreatePage("Batting")
+local BattingSection = BattingPage:CreateSection("Batting Features")
+
+local FieldingPage = windowz:CreatePage("Fielding")
+local FieldingSection = FieldingPage:CreateSection("Fielding Features")
+
+local MiscPage = windowz:CreatePage("Misc")
+local MiscSection = MiscPage:CreateSection("Misc Features")
+
+local CreditsPage = windowz:CreatePage("Credits")
+local CreditsSection = CreditsPage:CreateSection("Credits")
+
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local mouse = LocalPlayer:GetMouse()
+local camera = workspace.CurrentCamera
 
--- Try overriding Kick directly on the player's metatable
-if LocalPlayer and LocalPlayer.Kick then
-    local success, err = pcall(function()
-        local mt = getrawmetatable(LocalPlayer)
-        if mt and setreadonly then
-            setreadonly(mt, false)
-            mt.Kick = function() 
-                warn("[ShadowZ Hub] Kick blocked by direct override!") 
-                -- block kick
+-- Kick Hook (Robust)
+do
+    if LocalPlayer and LocalPlayer.Kick then
+        local success, err = pcall(function()
+            local mt = getrawmetatable(LocalPlayer)
+            if mt and setreadonly then
+                setreadonly(mt, false)
+                mt.Kick = function()
+                    warn("[ShadowZ Hub] Kick blocked by direct override!")
+                end
+                setreadonly(mt, true)
+            else
+                LocalPlayer.Kick = function()
+                    warn("[ShadowZ Hub] Kick blocked by method override!")
+                end
             end
-            setreadonly(mt, true)
-        else
-            -- fallback: override method on the object itself (less effective)
-            LocalPlayer.Kick = function() 
-                warn("[ShadowZ Hub] Kick blocked by method override!") 
-            end
+        end)
+        if not success then
+            warn("Failed to hook Kick directly: " .. tostring(err))
         end
-    end)
-    if not success then
-        warn("Failed to hook Kick directly: " .. tostring(err))
+    end
+
+    if hookfunction and LocalPlayer.Kick then
+        local originalKick = LocalPlayer.Kick
+        hookfunction(originalKick, function(...)
+            warn("[ShadowZ Hub] Kick blocked by hookfunction!")
+            return
+        end)
+    end
+
+    local mt = getrawmetatable(game)
+    if mt and setreadonly then
+        setreadonly(mt, false)
+        local oldNamecall = mt.__namecall
+        mt.__namecall = newcclosure(function(self, ...)
+            local method = getnamecallmethod()
+            if self == LocalPlayer and method == "Kick" then
+                warn("[ShadowZ Hub] Kick blocked by __namecall hook!")
+                return
+            end
+            return oldNamecall(self, ...)
+        end)
+        setreadonly(mt, true)
     end
 end
 
--- Backup hook using hookfunction (if supported)
-if hookfunction and LocalPlayer.Kick then
-    local originalKick = LocalPlayer.Kick
-    hookfunction(originalKick, function(...)
-        warn("[ShadowZ Hub] Kick blocked by hookfunction!")
-        return
-    end)
-end
-
--- Backup hook using __namecall metamethod override
-local mt = getrawmetatable(game)
-if mt and setreadonly then
-    setreadonly(mt, false)
-    local oldNamecall = mt.__namecall
-    mt.__namecall = newcclosure(function(self, ...)
-        local method = getnamecallmethod()
-        if self == LocalPlayer and method == "Kick" then
-            warn("[ShadowZ Hub] Kick blocked by __namecall hook!")
-            return
-        end
-        return oldNamecall(self, ...)
-    end)
-    setreadonly(mt, true)
-end
-
--- Load Rayfield UI
-local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
-
--- Custom UI Load Message
-Rayfield:Notify({
-    Title = "Baseball Universe | ShadowZ",
-    Content = "UI Loaded Successfully",
-    Duration = 4
-})
-
--- UI Setup
-local Window = Rayfield:CreateWindow({
-    Name = "Baseball Universe | ShadowZ Hub",
-    ConfigurationSaving = {
-        Enabled = false
-    }
-})
-
-local BattingTab = Window:CreateTab("Batting", 4483362458)
-local FieldingTab = Window:CreateTab("Fielding", 4483362458)
-local MiscTab = Window:CreateTab("Misc", 4483362458)
-
--- Vars
-local player = LocalPlayer
-local mouse = player:GetMouse()
-local camera = workspace.CurrentCamera
-
+-- Settings
 local Settings = {
     AutoAim = false,
     ShowDot = false,
     AutoHitDelay = 0.25,
-    FlyEnabled = false
+    FlyEnabled = false,
+    ShowStrikezone = false
 }
 
 -- Ball ESP
@@ -94,173 +87,151 @@ ballESP.Material = Enum.Material.SmoothPlastic
 ballESP.Color = Color3.fromRGB(0, 170, 255)
 ballESP.Transparency = 0.25
 ballESP.Name = "BallESP"
-ballESP.Position = Vector3.new(9999,9999,9999)
+ballESP.Position = Vector3.new(9999, 9999, 9999)
 ballESP.Parent = workspace
 
--- Batting Tab UI
-BattingTab:CreateToggle({
-    Name = "Ball ESP",
-    CurrentValue = false,
-    Callback = function(Value)
-        Settings.ShowDot = Value
+-- Strikezone ESP SelectionBox
+local strikezoneESP = nil
+local function createStrikezoneESP()
+    if strikezoneESP then
+        strikezoneESP:Destroy()
+        strikezoneESP = nil
     end
-})
 
-BattingTab:CreateToggle({
-    Name = "Auto Aim",
-    CurrentValue = false,
-    Callback = function(Value)
-        Settings.AutoAim = Value
-    end
-})
-
-BattingTab:CreateSlider({
-    Name = "Auto Hit Delay",
-    Range = {0, 1},
-    Increment = 0.01,
-    Suffix = "s",
-    CurrentValue = Settings.AutoHitDelay,
-    Callback = function(Value)
-        Settings.AutoHitDelay = Value
-    end
-})
-
-BattingTab:CreateToggle({
-    Name = "Auto Hit (Coming Soon)",
-    CurrentValue = false,
-    Callback = function(Value)
-        Rayfield:Notify({
-            Title = "Coming Soon",
-            Content = "Auto Hit will be available in the next update!",
-            Duration = 4
-        })
-    end
-})
-
--- Fielding Tab
-FieldingTab:CreateToggle({
-    Name = "Perfect Accuracy (Coming Soon)",
-    CurrentValue = false,
-    Callback = function(Value)
-        Rayfield:Notify({
-            Title = "Coming Soon",
-            Content = "Perfect Accuracy feature is still being developed!",
-            Duration = 4
-        })
-    end
-})
-
--- Misc Tab
-MiscTab:CreateSlider({
-    Name = "WalkSpeed",
-    Range = {16, 50},
-    Increment = 1,
-    CurrentValue = 16,
-    Callback = function(value)
-        if player.Character and player.Character:FindFirstChild("Humanoid") then
-            player.Character.Humanoid.WalkSpeed = value
+    local strikezone = workspace:FindFirstChild("Repository")
+    if strikezone then
+        strikezone = strikezone:FindFirstChild("Strikezone")
+        if strikezone then
+            strikezone = strikezone:FindFirstChild("Strikezone")
         end
     end
-})
 
--- Fly Toggle
-MiscTab:CreateToggle({
-    Name = "Fly",
-    CurrentValue = false,
-    Callback = function(Value)
-        Settings.FlyEnabled = Value
-        local character = player.Character
-        if not character or not character:FindFirstChild("HumanoidRootPart") then return end
-        local hrp = character.HumanoidRootPart
+    if strikezone and strikezone:IsA("BasePart") then
+        strikezoneESP = Instance.new("SelectionBox")
+        strikezoneESP.Name = "StrikezoneESP_SelectionBox"
+        strikezoneESP.Adornee = strikezone
+        strikezoneESP.LineThickness = 0.05
+        strikezoneESP.Color3 = Color3.fromRGB(0, 170, 255) -- bright blue
+        strikezoneESP.SurfaceTransparency = 1
+        strikezoneESP.Visible = false
+        strikezoneESP.Parent = workspace
+    else
+        warn("[ShadowZ Hub] Strikezone part not found for ESP!")
+    end
+end
 
-        if Value then
-            -- Disable gravity and allow flying movement
-            local BodyVelocity = Instance.new("BodyVelocity")
-            BodyVelocity.Name = "FlyBodyVelocity"
-            BodyVelocity.MaxForce = Vector3.new(1e5, 1e5, 1e5)
-            BodyVelocity.Velocity = Vector3.new(0,0,0)
-            BodyVelocity.Parent = hrp
+createStrikezoneESP()
 
-            local BodyGyro = Instance.new("BodyGyro")
-            BodyGyro.Name = "FlyBodyGyro"
-            BodyGyro.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
-            BodyGyro.CFrame = hrp.CFrame
-            BodyGyro.Parent = hrp
+local function updateStrikezoneESPVisible(state)
+    if strikezoneESP then
+        strikezoneESP.Visible = state
+    end
+end
 
-            -- Control flying with keys
-            local UserInputService = game:GetService("UserInputService")
+-- Batting Features
+BattingSection:CreateToggle("Ball ESP", {Toggled = false, Description = "Show ball ESP"}, function(value)
+    Settings.ShowDot = value
+    if not value then
+        ballESP.Position = Vector3.new(9999, 9999, 9999)
+    end
+end)
 
-            local connection
-            connection = game:GetService("RunService").RenderStepped:Connect(function()
-                if not Settings.FlyEnabled then
-                    if BodyVelocity then BodyVelocity:Destroy() end
-                    if BodyGyro then BodyGyro:Destroy() end
-                    connection:Disconnect()
-                    return
-                end
+BattingSection:CreateToggle("Auto Aim", {Toggled = false, Description = "Automatically aim at predicted ball"}, function(value)
+    Settings.AutoAim = value
+end)
 
-                local direction = Vector3.new(0,0,0)
-                if UserInputService:IsKeyDown(Enum.KeyCode.W) then
-                    direction = direction + (camera.CFrame.LookVector)
-                end
-                if UserInputService:IsKeyDown(Enum.KeyCode.S) then
-                    direction = direction - (camera.CFrame.LookVector)
-                end
-                if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
-                    direction = direction + Vector3.new(0,1,0)
-                end
-                if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
-                    direction = direction - Vector3.new(0,1,0)
-                end
+BattingSection:CreateToggle("Auto Hit (Coming Soon)", {Toggled = false, Description = "Auto Hit is coming soon!"}, function(value)
+    if value then
+        windowz:Notify("Coming Soon", "Auto Hit feature is still in development!", 4)
+    end
+end)
 
-                BodyVelocity.Velocity = direction * 50
-                BodyGyro.CFrame = camera.CFrame
-            end)
+BattingSection:CreateSlider("Auto Hit Delay", {Min = 0, Max = 1, Def = Settings.AutoHitDelay, Float = 0.01, Description = "Delay for Auto Hit"}, function(value)
+    Settings.AutoHitDelay = value
+end)
+
+BattingSection:CreateToggle("Strikezone ESP", {Toggled = false, Description = "Show outlined Strikezone"}, function(value)
+    Settings.ShowStrikezone = value
+    updateStrikezoneESPVisible(value)
+end)
+
+-- Fielding
+FieldingSection:CreateToggle("Perfect Accuracy (Coming Soon)", {Toggled = false, Description = "Feature in development"}, function(value)
+    if value then
+        windowz:Notify("Coming Soon", "Perfect Accuracy feature is still being developed!", 4)
+    end
+end)
+
+-- Misc
+MiscSection:CreateSlider("WalkSpeed", {Min = 16, Max = 50, Def = 16, Description = "Change WalkSpeed"}, function(value)
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character.Humanoid.WalkSpeed = value
+    end
+end)
+
+MiscSection:CreateToggle("Fly", {Toggled = false, Description = "Toggle flying mode"}, function(value)
+    Settings.FlyEnabled = value
+    local character = LocalPlayer.Character
+    if not character or not character:FindFirstChild("HumanoidRootPart") then return end
+    local hrp = character.HumanoidRootPart
+
+    if value then
+        local BodyVelocity = Instance.new("BodyVelocity")
+        BodyVelocity.Name = "FlyBodyVelocity"
+        BodyVelocity.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+        BodyVelocity.Velocity = Vector3.new(0, 0, 0)
+        BodyVelocity.Parent = hrp
+
+        local BodyGyro = Instance.new("BodyGyro")
+        BodyGyro.Name = "FlyBodyGyro"
+        BodyGyro.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
+        BodyGyro.CFrame = hrp.CFrame
+        BodyGyro.Parent = hrp
+
+        local conn
+        conn = RunService.RenderStepped:Connect(function()
+            if not Settings.FlyEnabled then
+                if BodyVelocity then BodyVelocity:Destroy() end
+                if BodyGyro then BodyGyro:Destroy() end
+                conn:Disconnect()
+                return
+            end
+
+            local direction = Vector3.new(0, 0, 0)
+            if UserInputService:IsKeyDown(Enum.KeyCode.W) then direction = direction + camera.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.S) then direction = direction - camera.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.Space) then direction = direction + Vector3.new(0, 1, 0) end
+            if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then direction = direction - Vector3.new(0, 1, 0) end
+
+            BodyVelocity.Velocity = direction * 50
+            BodyGyro.CFrame = camera.CFrame
+        end)
+    else
+        if hrp:FindFirstChild("FlyBodyVelocity") then hrp.FlyBodyVelocity:Destroy() end
+        if hrp:FindFirstChild("FlyBodyGyro") then hrp.FlyBodyGyro:Destroy() end
+    end
+end)
+
+MiscSection:CreateButton("TP to Mound", function()
+    local mound = workspace.Repository.Infield:FindFirstChild("Mound")
+    if mound and mound:IsA("BasePart") then
+        local character = LocalPlayer.Character
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            character.HumanoidRootPart.CFrame = mound.CFrame + Vector3.new(0, 5, 0)
+            windowz:Notify("Teleported", "You have been teleported to the mound.", 3)
         else
-            -- Disable fly by destroying the BodyVelocity and BodyGyro
-            if hrp:FindFirstChild("FlyBodyVelocity") then
-                hrp.FlyBodyVelocity:Destroy()
-            end
-            if hrp:FindFirstChild("FlyBodyGyro") then
-                hrp.FlyBodyGyro:Destroy()
-            end
+            windowz:Notify("Error", "Character or HumanoidRootPart not found.", 3)
         end
+    else
+        windowz:Notify("Error", "Mound not found in workspace.Repository.Infield.", 3)
     end
-})
+end)
 
--- TP to Mound button
-MiscTab:CreateButton({
-    Name = "TP to Mound",
-    Callback = function()
-        local mound = workspace.Repository.Infield:FindFirstChild("Mound")
-        if mound and mound:IsA("BasePart") then
-            local character = player.Character
-            if character and character:FindFirstChild("HumanoidRootPart") then
-                character.HumanoidRootPart.CFrame = mound.CFrame + Vector3.new(0, 5, 0) -- teleport slightly above mound to avoid falling through
-                Rayfield:Notify({
-                    Title = "Teleported",
-                    Content = "You have been teleported to the mound.",
-                    Duration = 3
-                })
-            else
-                Rayfield:Notify({
-                    Title = "Error",
-                    Content = "Character or HumanoidRootPart not found.",
-                    Duration = 3
-                })
-            end
-        else
-            Rayfield:Notify({
-                Title = "Error",
-                Content = "Mound not found in workspace.Repository.Infield.",
-                Duration = 3
-            })
-        end
-    end
-})
+-- Credits
+CreditsSection:CreateButton("Blaze - Owner and Lead Script Developer", function() end)
 
--- Pitch Event Prediction Logic
-local pitchEvent = game:GetService("ReplicatedStorage").Packages.Knit.Services.PitchingService.RE.Pitch
+-- Pitch Prediction + ESP + Auto Aim
+local pitchEvent = ReplicatedStorage.Packages.Knit.Services.PitchingService.RE.Pitch
 
 pitchEvent.OnClientEvent:Connect(function(...)
     local args = {...}
@@ -269,8 +240,8 @@ pitchEvent.OnClientEvent:Connect(function(...)
             local finalPos = v[4]
             local predictedPos = finalPos + Vector3.new(0, 0, -Settings.AutoHitDelay * 60)
 
-            local inBatBox = player.Character and player.Character:FindFirstChild("HumanoidRootPart") and
-                (player.Character.HumanoidRootPart.Position - finalPos).Magnitude <= 10
+            local inBatBox = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and
+                (LocalPlayer.Character.HumanoidRootPart.Position - finalPos).Magnitude <= 10
 
             if Settings.ShowDot and inBatBox then
                 ballESP.Position = Vector3.new(finalPos.X - 0.33, finalPos.Y + 0.47, 112.6)
@@ -286,6 +257,14 @@ pitchEvent.OnClientEvent:Connect(function(...)
                     mousemoverel(dx, dy)
                 end
             end
+
+            if Settings.ShowStrikezone then
+                updateStrikezoneESPVisible(true)
+            else
+                updateStrikezoneESPVisible(false)
+            end
         end
     end
 end)
+
+print("ShadowZ Hub UI Loaded Successfully")
