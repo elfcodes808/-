@@ -29,7 +29,19 @@ Rayfield:Notify({
     Duration = 3
 })
 
--- Create buttons for each game script
+-- Script Buttons
+ScriptsTab:CreateButton({
+    Name = "Baseball Universe",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/elfcodes808/-/refs/heads/main/BU"))()
+        Rayfield:Notify({
+            Title = "Successfully loaded!",
+            Content = "Baseball Universe script is ready!",
+            Duration = 5
+        })
+    end
+})
+
 ScriptsTab:CreateButton({
     Name = "Siege Script",
     Callback = function()
