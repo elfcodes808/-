@@ -1510,4 +1510,4 @@ Rayfield:Notify({
     Image = 4483362458
 })
 
-print(IsMobile and "Enhanced Silent Aim Loaded - Mobile & PC Support" or "Enhanced Silent Aim Loaded - No Shake + Perfect Auto Hit")
+print(IsMobile and "gyat")
