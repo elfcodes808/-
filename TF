@@ -1,0 +1,78 @@
+-- Load Rayfield UI Library
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+-- Create the UI Window
+local Window = Rayfield:CreateWindow({
+   Name = "ShadowZ Hub | Track And Field",
+   LoadingTitle = "ShadowZ",
+   LoadingSubtitle = "Track and Field",
+   ConfigurationSaving = {
+      Enabled = false
+   },
+   Discord = {
+      Enabled = false
+   },
+   KeySystem = false
+})
+
+-- Create Tab and Section
+local Tab = Window:CreateTab("Main", 4483362458)
+local Section = Tab:CreateSection("Toggles")
+
+-- Infinite Stamina Toggle (Bar Stays Full)
+local infStam = false
+Tab:CreateToggle({
+   Name = "Infinite Stamina",
+   CurrentValue = false,
+   Callback = function(Value)
+      infStam = Value
+      while infStam do
+         local player = game:GetService("Players").LocalPlayer
+         local gui = player:FindFirstChild("PlayerGui")
+         if gui then
+            local main = gui:FindFirstChild("Main")
+            if main then
+               local stamina = main:FindFirstChild("Stamina")
+               if stamina then
+                  -- If it's a NumberValue (logic-based)
+                  if stamina:IsA("NumberValue") then
+                     stamina.Value = 999999
+                  end
+                  -- If it's a Frame (visual bar), try to fill it
+                  if stamina:IsA("Frame") then
+                     -- Try to find a child frame that represents the bar fill
+                     local bar = stamina:FindFirstChildWhichIsA("Frame")
+                     if bar then
+                        bar.Size = UDim2.new(1, 0, 1, 0) -- Full size
+                     end
+                  end
+               end
+            end
+         end
+         task.wait(0.05)
+      end
+   end,
+})
+
+-- Q + E Key Spam Toggle
+local spamKeys = false
+Tab:CreateToggle({
+   Name = "Speed Boost",
+   CurrentValue = false,
+   Callback = function(Value)
+      spamKeys = Value
+      local VirtualInputManager = game:GetService("VirtualInputManager")
+      while spamKeys do
+         -- Press Q
+         VirtualInputManager:SendKeyEvent(true, "Q", false, game)
+         task.wait(0.05)
+         VirtualInputManager:SendKeyEvent(false, "Q", false, game)
+         task.wait(0.05)
+         -- Press E
+         VirtualInputManager:SendKeyEvent(true, "E", false, game)
+         task.wait(0.05)
+         VirtualInputManager:SendKeyEvent(false, "E", false, game)
+         task.wait(0.05)
+      end
+   end,
+})
